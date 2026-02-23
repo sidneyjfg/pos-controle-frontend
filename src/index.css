@@ -1,0 +1,52 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  --color-nerus-50: #fef2f2;
+  --color-nerus-100: #fee2e2;
+  --color-nerus-200: #fecaca;
+  --color-nerus-300: #fca5a5;
+  --color-nerus-400: #f87171;
+  --color-nerus-500: #ef4444;
+  --color-nerus-600: #dc2626;
+  --color-nerus-700: #b91c1c;
+  --color-nerus-800: #991b1b;
+  --color-nerus-900: #7f1d1d;
+  --color-nerus-950: #450a0a;
+  
+  --font-family-sans: 'Inter', system-ui, sans-serif;
+  
+  --shadow-soft: 0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04);
+  --shadow-soft-lg: 0 10px 40px -10px rgba(0, 0, 0, 0.1), 0 20px 25px -5px rgba(0, 0, 0, 0.04);
+  --shadow-nerus: 0 4px 20px -2px rgba(220, 38, 38, 0.2);
+  
+  --animate-fade-in: fadeIn 0.3s ease-in-out;
+  --animate-slide-in: slideIn 0.3s ease-out;
+  --animate-scale-in: scaleIn 0.2s ease-out;
+  
+  @keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  
+  @keyframes slideIn {
+    0% { transform: translateY(-10px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+  
+  @keyframes scaleIn {
+    0% { transform: scale(0.95); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+}
+
+@layer base {
+  * {
+    @apply antialiased;
+  }
+  
+  body {
+    @apply font-sans;
+  }
+}
