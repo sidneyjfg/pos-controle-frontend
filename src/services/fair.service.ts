@@ -1,5 +1,5 @@
 import { api } from './api';
-import type { Fair, CreateFairDTO, UpdatePriceDTO } from '../types';
+import type { Fair, CreateFairDTO, UpdatePriceDTO, FairProduct, AddProductToFairDTO, UpdateFairProductPriceDTO } from '../types';
 
 export const fairService = {
   async getAll(): Promise<Fair[]> {
@@ -23,5 +23,31 @@ export const fairService = {
 
   async sync(fairId: string): Promise<void> {
     await api.post(`/fairs/${fairId}/sync`);
+  },
+
+  // Gestão de produtos por feira
+  async getFairProducts(fairId: string): Promise<FairProduct[]> {
+    const response = await api.get<FairProduct[]>(`/fairs/${fairId}/products`);
+    return response.data;
+  },
+
+  async addProductToFair(fairId: string, data: AddProductToFairDTO): Promise<FairProduct> {
+    const response = await api.post<FairProduct>(`/fairs/${fairId}/products`, data);
+    return response.data;
+  },
+
+  async updateFairProductPrice(fairId: string, internalCode: string, data: UpdateFairProductPriceDTO): Promise<FairProduct> {
+    const response = await api.put<FairProduct>(`/fairs/${fairId}/products/${internalCode}`, data);
+    return response.data;
+  },
+
+  async removeProductFromFair(fairId: string, internalCode: string): Promise<void> {
+    await api.delete(`/fairs/${fairId}/products/${internalCode}`);
+  },
+
+  // Ativar/Desativar feira
+  async toggleFairStatus(fairId: string, isActive: boolean): Promise<Fair> {
+    const response = await api.patch<Fair>(`/fairs/${fairId}/status`, { isActive });
+    return response.data;
   },
 };

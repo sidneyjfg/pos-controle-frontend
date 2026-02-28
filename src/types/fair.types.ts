@@ -11,11 +11,25 @@ export interface Fair {
 }
 
 export interface FairProduct {
-  FairProductID: string;
+  FairProductID: number;
   FairID: string;
   ProductID: number;
-  CustomPrice?: number;
+  SalePrice: number;
+  PromotionalPrice?: number;
+  InitialStock: number;
+  SoldQuantity: number;
   IsActive: boolean;
+  CreatedAt: string;
+  UpdatedAt: string;
+  // Relação com produto
+  product?: {
+    ProductID: number;
+    InternalCode: string;
+    Name: string;
+    NameEng?: string;
+    BarCode?: string;
+    SalePrice?: number;
+  };
 }
 
 export interface FairSale {
@@ -36,6 +50,15 @@ export interface CreateFairDTO {
 
 export interface UpdatePriceDTO {
   CustomPrice: number;
+}
+
+export interface AddProductToFairDTO {
+  internalCode: string;
+  customPrice?: number;
+}
+
+export interface UpdateFairProductPriceDTO {
+  customPrice: number;
 }
 
 export interface SyncFairDTO {

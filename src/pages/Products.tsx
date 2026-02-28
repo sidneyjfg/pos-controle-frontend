@@ -7,8 +7,11 @@ import { productService } from '../services';
 export const Products: React.FC = () => {
   const { products, loading, error, refetch, createProduct } = useProducts();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
   
   // Estados para os dropdowns
   const [productGroups, setProductGroups] = useState<ProductGroup[]>([]);
@@ -59,6 +62,68 @@ export const Products: React.FC = () => {
     setIsDetailModalOpen(true);
   };
 
+  const handleEditProduct = (product: Product) => {
+    setSelectedProduct(product);
+    setFormData({
+      Name: product.Name || '',
+      NameEng: product.NameEng || '',
+      InternalCode: product.InternalCode,
+      BarCode: product.BarCode || '',
+      SalePrice: product.SalePrice,
+      ProductGroupID: product.ProductGroupID,
+      ProductTypeID: product.ProductTypeID,
+      UnitTypeID: product.UnitTypeID,
+      StatusID: product.StatusID,
+      NFCeNCM: product.NFCeNCM || '',
+      NFCeCFOP: product.NFCeCFOP || '',
+      NFCeCST: product.NFCeCST || '',
+      NFCeCEST: product.NFCeCEST || '',
+      NFCeAliqICMS: product.NFCeAliqICMS,
+      NFCeCSTPIS: product.NFCeCSTPIS || '',
+      NFCeAliqPIS: product.NFCeAliqPIS,
+      NFCeCSTCOFINS: product.NFCeCSTCOFINS || '',
+      NFCeAliqCOFINS: product.NFCeAliqCOFINS,
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProduct) return;
+
+    setIsUpdating(true);
+    setUpdateError(null);
+
+    try {
+      await productService.update(selectedProduct.ProductID, formData);
+      setIsEditModalOpen(false);
+      setSelectedProduct(null);
+      setFormData({
+        Name: '',
+        InternalCode: '',
+      });
+      refetch();
+    } catch (err: any) {
+      setUpdateError(err.response?.data?.message || 'Erro ao atualizar produto');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // Função para deletar produto (será implementada quando necessário)
+  // const handleDeleteProduct = async (product: Product) => {
+  //   if (!window.confirm(`Deseja realmente excluir o produto "${product.Name}"?`)) {
+  //     return;
+  //   }
+  //
+  //   try {
+  //     await productService.delete(product.ProductID);
+  //     refetch();
+  //   } catch (err: any) {
+  //     alert(err.response?.data?.message || 'Erro ao excluir produto');
+  //   }
+  // };
+
   const columns = [
     { header: 'ID', accessor: 'ProductID' as keyof Product },
     { header: 'Nome', accessor: 'Name' as keyof Product },
@@ -72,33 +137,45 @@ export const Products: React.FC = () => {
     {
       header: 'Ações',
       accessor: (row: Product) => (
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={() => handleViewDetails(row)}
-        >
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            className="h-4 w-4 inline-block mr-1" 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
+        <div className="flex gap-2">
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => handleViewDetails(row)}
           >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" 
-            />
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" 
-            />
-          </svg>
-          Detalhes
-        </Button>
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              className="h-4 w-4 inline-block mr-1" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" 
+              />
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" 
+              />
+            </svg>
+            Ver
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => handleEditProduct(row)}
+          >
+            <svg className="h-4 w-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            Editar
+          </Button>
+        </div>
       ),
     },
   ];
@@ -329,6 +406,212 @@ export const Products: React.FC = () => {
         </form>
         {createProduct.error && (
           <div className="text-red-600 text-sm mt-2">{createProduct.error}</div>
+        )}
+      </Modal>
+
+      {/* Modal de Edição do Produto */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedProduct(null);
+          setUpdateError(null);
+        }}
+        title="Editar Produto"
+        size="xl"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => {
+              setIsEditModalOpen(false);
+              setSelectedProduct(null);
+              setUpdateError(null);
+            }}>
+              Cancelar
+            </Button>
+            <Button onClick={handleUpdateProduct} loading={isUpdating}>
+              Salvar Alterações
+            </Button>
+          </>
+        }
+      >
+        <form onSubmit={handleUpdateProduct} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Nome *"
+              value={formData.Name}
+              onChange={(e) => setFormData({ ...formData, Name: e.target.value })}
+              required
+            />
+            <Input
+              label="Nome (Inglês)"
+              value={formData.NameEng || ''}
+              onChange={(e) => setFormData({ ...formData, NameEng: e.target.value })}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Código Interno *"
+              value={formData.InternalCode}
+              onChange={(e) => setFormData({ ...formData, InternalCode: e.target.value })}
+              required
+              disabled
+            />
+            <Input
+              label="Código de Barras"
+              value={formData.BarCode || ''}
+              onChange={(e) => setFormData({ ...formData, BarCode: e.target.value })}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Grupo de Produto</label>
+              <select
+                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-nerus-500 focus:border-transparent bg-white hover:border-gray-300"
+                value={formData.ProductGroupID || ''}
+                onChange={(e) => setFormData({ ...formData, ProductGroupID: e.target.value ? Number(e.target.value) : undefined })}
+              >
+                <option value="">Selecione...</option>
+                {productGroups.map(group => (
+                  <option key={group.ProductGroupID} value={group.ProductGroupID}>
+                    {group.Name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Tipo de Produto</label>
+              <select
+                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-nerus-500 focus:border-transparent bg-white hover:border-gray-300"
+                value={formData.ProductTypeID || ''}
+                onChange={(e) => setFormData({ ...formData, ProductTypeID: e.target.value ? Number(e.target.value) : undefined })}
+              >
+                <option value="">Selecione...</option>
+                {productTypes.map(type => (
+                  <option key={type.ProductTypeID} value={type.ProductTypeID}>
+                    {type.Name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Unidade</label>
+              <select
+                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-nerus-500 focus:border-transparent bg-white hover:border-gray-300"
+                value={formData.UnitTypeID || ''}
+                onChange={(e) => setFormData({ ...formData, UnitTypeID: e.target.value ? Number(e.target.value) : undefined })}
+              >
+                <option value="">Selecione...</option>
+                {unitTypes.map(unit => (
+                  <option key={unit.UnitTypeID} value={unit.UnitTypeID}>
+                    {unit.Name} ({unit.Abbreviation})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+              <select
+                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-nerus-500 focus:border-transparent bg-white hover:border-gray-300"
+                value={formData.StatusID || ''}
+                onChange={(e) => setFormData({ ...formData, StatusID: e.target.value ? Number(e.target.value) : undefined })}
+              >
+                <option value="">Selecione...</option>
+                {statuses.map(status => (
+                  <option key={status.StatusID} value={status.StatusID}>
+                    {status.Name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <Input
+            label="Preço de Venda"
+            type="number"
+            step="0.01"
+            value={formData.SalePrice || ''}
+            onChange={(e) => setFormData({ ...formData, SalePrice: e.target.value ? parseFloat(e.target.value) : undefined })}
+          />
+
+          <div className="border-t-2 border-gray-100 pt-6 mt-2">
+            <h4 className="font-bold text-gray-800 mb-4 flex items-center">
+              <svg className="w-5 h-5 mr-2 text-nerus-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Informações Fiscais (NFC-e)
+            </h4>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                label="NCM"
+                value={formData.NFCeNCM || ''}
+                onChange={(e) => setFormData({ ...formData, NFCeNCM: e.target.value })}
+              />
+              <Input
+                label="CFOP"
+                value={formData.NFCeCFOP || ''}
+                onChange={(e) => setFormData({ ...formData, NFCeCFOP: e.target.value })}
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <Input
+                label="CST"
+                value={formData.NFCeCST || ''}
+                onChange={(e) => setFormData({ ...formData, NFCeCST: e.target.value })}
+              />
+              <Input
+                label="CEST"
+                value={formData.NFCeCEST || ''}
+                onChange={(e) => setFormData({ ...formData, NFCeCEST: e.target.value })}
+              />
+              <Input
+                label="Alíquota ICMS (%)"
+                type="number"
+                step="0.01"
+                value={formData.NFCeAliqICMS || ''}
+                onChange={(e) => setFormData({ ...formData, NFCeAliqICMS: e.target.value ? parseFloat(e.target.value) : undefined })}
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <Input
+                label="CST PIS"
+                value={formData.NFCeCSTPIS || ''}
+                onChange={(e) => setFormData({ ...formData, NFCeCSTPIS: e.target.value })}
+              />
+              <Input
+                label="Alíquota PIS (%)"
+                type="number"
+                step="0.01"
+                value={formData.NFCeAliqPIS || ''}
+                onChange={(e) => setFormData({ ...formData, NFCeAliqPIS: e.target.value ? parseFloat(e.target.value) : undefined })}
+              />
+              <Input
+                label="CST COFINS"
+                value={formData.NFCeCSTCOFINS || ''}
+                onChange={(e) => setFormData({ ...formData, NFCeCSTCOFINS: e.target.value })}
+              />
+            </div>
+
+            <Input
+              label="Alíquota COFINS (%)"
+              type="number"
+              step="0.01"
+              value={formData.NFCeAliqCOFINS || ''}
+              onChange={(e) => setFormData({ ...formData, NFCeAliqCOFINS: e.target.value ? parseFloat(e.target.value) : undefined })}
+            />
+          </div>
+        </form>
+        {updateError && (
+          <div className="text-red-600 text-sm mt-2">{updateError}</div>
         )}
       </Modal>
 
