@@ -1,4 +1,4 @@
-# 🚀 Início Rápido - POS Controle Frontend
+# 🚀 Início Rápido - NerusMobile Frontend
 
 ## Comandos Essenciais
 

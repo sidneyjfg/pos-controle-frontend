@@ -25,9 +25,14 @@ export function useApi<T>(apiFunc: (...args: any[]) => Promise<T>): UseApiReturn
         setData(result);
         return result;
       } catch (err: any) {
+        // Don't set generic error for validation errors - let the component handle field-specific errors
+        if (err.response?.data?.validationErrors) {
+          // Re-throw so the component can handle validation errors
+          throw err;
+        }
         const errorMessage = err.response?.data?.message || err.message || 'Erro desconhecido';
         setError(errorMessage);
-        return null;
+        throw err;
       } finally {
         setLoading(false);
       }

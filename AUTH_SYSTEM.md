@@ -2,7 +2,7 @@
 
 ## ✅ Implementação Completa
 
-Sistema de autenticação completo implementado no frontend do POS Controle, totalmente integrado com o backend.
+Sistema de autenticação completo implementado no frontend do NerusMobile, totalmente integrado com o backend.
 
 ---
 

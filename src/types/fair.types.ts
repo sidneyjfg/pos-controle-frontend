@@ -15,20 +15,29 @@ export interface FairProduct {
   FairID: string;
   ProductID: number;
   SalePrice: number;
-  PromotionalPrice?: number;
+  PromotionalPrice?: number | null;
   InitialStock: number;
   SoldQuantity: number;
   IsActive: boolean;
   CreatedAt: string;
   UpdatedAt: string;
-  // Relação com produto
+  // Relação com produto (minúsculo conforme definição da entidade)
   product?: {
     ProductID: number;
     InternalCode: string;
-    Name: string;
-    NameEng?: string;
-    BarCode?: string;
-    SalePrice?: number;
+    Name?: string | null;
+    NameEng?: string | null;
+    BarCode?: string | null;
+    SalePrice?: number | null;
+  };
+  // Alias para compatibilidade (case-insensitive)
+  Product?: {
+    ProductID: number;
+    InternalCode: string;
+    Name?: string | null;
+    NameEng?: string | null;
+    BarCode?: string | null;
+    SalePrice?: number | null;
   };
 }
 

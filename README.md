@@ -1,4 +1,4 @@
-# POS Controle - Frontend
+# NerusMobile - Frontend
 
 Frontend desenvolvido em React + TypeScript + Vite + Tailwind CSS para o sistema de controle de PDV.
 

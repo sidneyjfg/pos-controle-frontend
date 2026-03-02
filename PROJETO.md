@@ -1,4 +1,4 @@
-# Documentação do Projeto POS Controle Frontend
+# Documentação do Projeto NerusMobile Frontend
 
 ## 📋 Visão Geral
 

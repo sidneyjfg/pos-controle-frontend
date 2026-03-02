@@ -40,7 +40,7 @@ export const Navbar: React.FC = () => {
                 <h1 className="text-2xl font-black tracking-tight">
                   Nérus
                 </h1>
-                <p className="text-xs text-nerus-100 font-medium -mt-1">POS Control</p>
+                <p className="text-xs text-nerus-100 font-medium -mt-1">NerusMobile</p>
               </div>
             </Link>
           </div>

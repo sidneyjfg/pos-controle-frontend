@@ -78,7 +78,7 @@ export const Fairs: React.FC = () => {
     try {
       await fairService.addProductToFair(selectedFair.FairID, {
         internalCode: product.InternalCode,
-        customPrice: product.SalePrice // Usa preço padrão inicialmente
+        customPrice: product.SalePrice ?? undefined // Converte null para undefined
       });
 
       // Recarregar produtos da feira
@@ -169,7 +169,7 @@ export const Fairs: React.FC = () => {
     },
     {
       header: 'Sincronizada em',
-      accessor: (row: Fair) => row.SyncedAt ? new Date(row.SyncedAt).toLocaleString('pt-BR') : '-',
+      accessor: (row: Fair) => row.SyncedAt ? new Date(row.SyncedAt).toLocaleString('pt-BR') : 'Nunca',
     },
     {
       header: 'Ações',

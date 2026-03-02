@@ -1,4 +1,4 @@
-﻿# ✅ Implementação Completa do Frontend - POS Controle
+﻿# ✅ Implementação Completa do Frontend - NerusMobile
 
 ## 📋 Resumo Geral
 

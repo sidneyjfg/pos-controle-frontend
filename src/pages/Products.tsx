@@ -12,17 +12,47 @@ export const Products: React.FC = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateError, setUpdateError] = useState<string | null>(null);
-  
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
   // Estados para os dropdowns
   const [productGroups, setProductGroups] = useState<ProductGroup[]>([]);
   const [productTypes, setProductTypes] = useState<ProductType[]>([]);
   const [unitTypes, setUnitTypes] = useState<UnitType[]>([]);
   const [statuses, setStatuses] = useState<Status[]>([]);
-  
+
   const [formData, setFormData] = useState<CreateProductDTO>({
     Name: '',
     InternalCode: '',
+    SalePrice: 0,
+    ProductGroupID: 0,
+    UnitTypeID: 0,
+    NFCeNCM: '',
+    NFCeCFOP: '',
+    NFCeCST: '',
+    NFCeCSTPIS: '',
+    NFCeAliqPIS: 0,
+    NFCeCSTCOFINS: '',
+    NFCeAliqCOFINS: 0,
   });
+
+  const clearFieldErrors = () => {
+    setFieldErrors({});
+  };
+
+  const mapValidationErrors = (err: any) => {
+    const validationErrors = err.response?.data?.validationErrors;
+
+    if (!validationErrors) return false;
+
+    const formattedErrors: Record<string, string> = {};
+
+    validationErrors.forEach((e: any) => {
+      formattedErrors[e.field] = e.message;
+    });
+
+    setFieldErrors(formattedErrors);
+    return true;
+  };
 
   useEffect(() => {
     const loadDropdownData = async () => {
@@ -46,14 +76,32 @@ export const Products: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = await createProduct.execute(formData);
-    if (result) {
-      setIsModalOpen(false);
-      setFormData({
-        Name: '',
-        InternalCode: '',
-      });
-      refetch();
+    clearFieldErrors();
+
+    try {
+      const result = await createProduct.execute(formData);
+
+      if (result) {
+        setIsModalOpen(false);
+        setFormData({
+          Name: '',
+          InternalCode: '',
+          SalePrice: 0,
+          ProductGroupID: 0,
+          UnitTypeID: 0,
+          NFCeNCM: '',
+          NFCeCFOP: '',
+          NFCeCST: '',
+          NFCeCSTPIS: '',
+          NFCeAliqPIS: 0,
+          NFCeCSTCOFINS: '',
+          NFCeAliqCOFINS: 0,
+        });
+
+        refetch();
+      }
+    } catch (err: any) {
+      mapValidationErrors(err);
     }
   };
 
@@ -69,10 +117,10 @@ export const Products: React.FC = () => {
       NameEng: product.NameEng || '',
       InternalCode: product.InternalCode,
       BarCode: product.BarCode || '',
-      SalePrice: product.SalePrice,
-      ProductGroupID: product.ProductGroupID,
+      SalePrice: product.SalePrice ?? 0,
+      ProductGroupID: product.ProductGroupID ?? 0,
       ProductTypeID: product.ProductTypeID,
-      UnitTypeID: product.UnitTypeID,
+      UnitTypeID: product.UnitTypeID ?? 0,
       StatusID: product.StatusID,
       NFCeNCM: product.NFCeNCM || '',
       NFCeCFOP: product.NFCeCFOP || '',
@@ -93,18 +141,37 @@ export const Products: React.FC = () => {
 
     setIsUpdating(true);
     setUpdateError(null);
+    clearFieldErrors();
 
     try {
       await productService.update(selectedProduct.ProductID, formData);
+
       setIsEditModalOpen(false);
       setSelectedProduct(null);
+      clearFieldErrors();
+
       setFormData({
         Name: '',
         InternalCode: '',
+        SalePrice: 0,
+        ProductGroupID: 0,
+        UnitTypeID: 0,
+        NFCeNCM: '',
+        NFCeCFOP: '',
+        NFCeCST: '',
+        NFCeCSTPIS: '',
+        NFCeAliqPIS: 0,
+        NFCeCSTCOFINS: '',
+        NFCeAliqCOFINS: 0,
       });
+
       refetch();
     } catch (err: any) {
-      setUpdateError(err.response?.data?.message || 'Erro ao atualizar produto');
+      const handled = mapValidationErrors(err);
+
+      if (!handled) {
+        setUpdateError(err.response?.data?.message || 'Erro ao atualizar produto');
+      }
     } finally {
       setIsUpdating(false);
     }
@@ -143,24 +210,24 @@ export const Products: React.FC = () => {
             size="sm"
             onClick={() => handleViewDetails(row)}
           >
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className="h-4 w-4 inline-block mr-1" 
-              fill="none" 
-              viewBox="0 0 24 24" 
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4 inline-block mr-1"
+              fill="none"
+              viewBox="0 0 24 24"
               stroke="currentColor"
             >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" 
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
               />
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" 
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
               />
             </svg>
             Ver
@@ -215,12 +282,18 @@ export const Products: React.FC = () => {
 
       <Modal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          clearFieldErrors();
+        }}
         title="Novo Produto"
         size="xl"
         footer={
           <>
-            <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
+            <Button variant="secondary" onClick={() => {
+              setIsModalOpen(false);
+              clearFieldErrors();
+            }}>
               Cancelar
             </Button>
             <Button onClick={handleSubmit} loading={createProduct.loading}>
@@ -229,18 +302,37 @@ export const Products: React.FC = () => {
           </>
         }
       >
+        {Object.keys(fieldErrors).length > 0 && (
+          <div className="bg-red-50 border-l-4 border-red-500 text-red-800 px-4 py-3 rounded mb-4">
+            <div className="flex items-start">
+              <svg className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              <div className="flex-1">
+                <p className="font-semibold mb-1">Corrija os seguintes erros:</p>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  {Object.entries(fieldErrors).map(([field, message]) => (
+                    <li key={field}>{message}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <Input
               label="Nome *"
               value={formData.Name}
               onChange={(e) => setFormData({ ...formData, Name: e.target.value })}
+              error={fieldErrors.Name}
               required
             />
             <Input
-              label="Nome (Inglês)"
+              label="Descrição Completa"
               value={formData.NameEng || ''}
               onChange={(e) => setFormData({ ...formData, NameEng: e.target.value })}
+              error={fieldErrors.NameEng}
             />
           </div>
 
@@ -249,12 +341,14 @@ export const Products: React.FC = () => {
               label="Código Interno *"
               value={formData.InternalCode}
               onChange={(e) => setFormData({ ...formData, InternalCode: e.target.value })}
+              error={fieldErrors.InternalCode}
               required
             />
             <Input
               label="Código de Barras"
               value={formData.BarCode || ''}
               onChange={(e) => setFormData({ ...formData, BarCode: e.target.value })}
+              error={fieldErrors.BarCode}
             />
           </div>
 
@@ -264,7 +358,7 @@ export const Products: React.FC = () => {
               <select
                 className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-nerus-500 focus:border-transparent bg-white hover:border-gray-300"
                 value={formData.ProductGroupID || ''}
-                onChange={(e) => setFormData({ ...formData, ProductGroupID: e.target.value ? Number(e.target.value) : undefined })}
+                onChange={(e) => setFormData({ ...formData, ProductGroupID: e.target.value ? Number(e.target.value) : 0 })}
               >
                 <option value="">Selecione...</option>
                 {productGroups.map(group => (
@@ -298,7 +392,7 @@ export const Products: React.FC = () => {
               <select
                 className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-nerus-500 focus:border-transparent bg-white hover:border-gray-300"
                 value={formData.UnitTypeID || ''}
-                onChange={(e) => setFormData({ ...formData, UnitTypeID: e.target.value ? Number(e.target.value) : undefined })}
+                onChange={(e) => setFormData({ ...formData, UnitTypeID: e.target.value ? Number(e.target.value) : 0 })}
               >
                 <option value="">Selecione...</option>
                 {unitTypes.map(unit => (
@@ -331,7 +425,7 @@ export const Products: React.FC = () => {
             type="number"
             step="0.01"
             value={formData.SalePrice || ''}
-            onChange={(e) => setFormData({ ...formData, SalePrice: e.target.value ? parseFloat(e.target.value) : undefined })}
+            onChange={(e) => setFormData({ ...formData, SalePrice: e.target.value ? parseFloat(e.target.value) : 0 })}
           />
 
           <div className="border-t-2 border-gray-100 pt-6 mt-2">
@@ -341,30 +435,44 @@ export const Products: React.FC = () => {
               </svg>
               Informações Fiscais (NFC-e)
             </h4>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <Input
-                label="NCM"
+                label="NCM *"
                 value={formData.NFCeNCM || ''}
                 onChange={(e) => setFormData({ ...formData, NFCeNCM: e.target.value })}
+                error={fieldErrors.NFCeNCM}
+                required
+                maxLength={8}
+                placeholder="8 dígitos"
               />
               <Input
-                label="CFOP"
+                label="CFOP *"
                 value={formData.NFCeCFOP || ''}
                 onChange={(e) => setFormData({ ...formData, NFCeCFOP: e.target.value })}
+                error={fieldErrors.NFCeCFOP}
+                required
+                maxLength={4}
+                placeholder="4 dígitos"
               />
             </div>
 
             <div className="grid grid-cols-3 gap-4">
               <Input
-                label="CST"
+                label="CST ICMS *"
                 value={formData.NFCeCST || ''}
                 onChange={(e) => setFormData({ ...formData, NFCeCST: e.target.value })}
+                error={fieldErrors.NFCeCST}
+                required
+                maxLength={3}
+                placeholder="3 dígitos"
               />
               <Input
                 label="CEST"
                 value={formData.NFCeCEST || ''}
                 onChange={(e) => setFormData({ ...formData, NFCeCEST: e.target.value })}
+                error={fieldErrors.NFCeCEST}
+                placeholder="Se CST=110"
               />
               <Input
                 label="Alíquota ICMS (%)"
@@ -372,41 +480,53 @@ export const Products: React.FC = () => {
                 step="0.01"
                 value={formData.NFCeAliqICMS || ''}
                 onChange={(e) => setFormData({ ...formData, NFCeAliqICMS: e.target.value ? parseFloat(e.target.value) : undefined })}
+                error={fieldErrors.NFCeAliqICMS}
               />
             </div>
 
             <div className="grid grid-cols-3 gap-4">
               <Input
-                label="CST PIS"
+                label="CST PIS *"
                 value={formData.NFCeCSTPIS || ''}
                 onChange={(e) => setFormData({ ...formData, NFCeCSTPIS: e.target.value })}
+                error={fieldErrors.NFCeCSTPIS}
+                required
+                maxLength={2}
+                placeholder="2 dígitos"
               />
               <Input
-                label="Alíquota PIS (%)"
+                label="Alíquota PIS (%) *"
                 type="number"
                 step="0.01"
                 value={formData.NFCeAliqPIS || ''}
                 onChange={(e) => setFormData({ ...formData, NFCeAliqPIS: e.target.value ? parseFloat(e.target.value) : undefined })}
+                error={fieldErrors.NFCeAliqPIS}
+                required
+                placeholder="Ex: 1.65"
               />
               <Input
-                label="CST COFINS"
+                label="CST COFINS *"
                 value={formData.NFCeCSTCOFINS || ''}
                 onChange={(e) => setFormData({ ...formData, NFCeCSTCOFINS: e.target.value })}
+                error={fieldErrors.NFCeCSTCOFINS}
+                required
+                maxLength={2}
+                placeholder="2 dígitos"
               />
             </div>
 
             <Input
-              label="Alíquota COFINS (%)"
+              label="Alíquota COFINS (%) *"
               type="number"
               step="0.01"
               value={formData.NFCeAliqCOFINS || ''}
               onChange={(e) => setFormData({ ...formData, NFCeAliqCOFINS: e.target.value ? parseFloat(e.target.value) : undefined })}
+              error={fieldErrors.NFCeAliqCOFINS}
+              required
+              placeholder="Ex: 7.60"
             />
           </div>
         </form>
-        {createProduct.error && (
-          <div className="text-red-600 text-sm mt-2">{createProduct.error}</div>
-        )}
       </Modal>
 
       {/* Modal de Edição do Produto */}
@@ -416,6 +536,7 @@ export const Products: React.FC = () => {
           setIsEditModalOpen(false);
           setSelectedProduct(null);
           setUpdateError(null);
+          clearFieldErrors();
         }}
         title="Editar Produto"
         size="xl"
@@ -425,6 +546,7 @@ export const Products: React.FC = () => {
               setIsEditModalOpen(false);
               setSelectedProduct(null);
               setUpdateError(null);
+              clearFieldErrors();
             }}>
               Cancelar
             </Button>
@@ -434,18 +556,47 @@ export const Products: React.FC = () => {
           </>
         }
       >
+        {Object.keys(fieldErrors).length > 0 && (
+          <div className="bg-red-50 border-l-4 border-red-500 text-red-800 px-4 py-3 rounded mb-4">
+            <div className="flex items-start">
+              <svg className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              <div className="flex-1">
+                <p className="font-semibold mb-1">Corrija os seguintes erros:</p>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  {Object.entries(fieldErrors).map(([field, message]) => (
+                    <li key={field}>{message}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+        {updateError && (
+          <div className="bg-red-50 border-l-4 border-red-500 text-red-800 px-4 py-3 rounded mb-4">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              <p className="font-semibold">{updateError}</p>
+            </div>
+          </div>
+        )}
         <form onSubmit={handleUpdateProduct} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <Input
               label="Nome *"
               value={formData.Name}
               onChange={(e) => setFormData({ ...formData, Name: e.target.value })}
+              error={fieldErrors.Name}
               required
             />
             <Input
               label="Nome (Inglês)"
               value={formData.NameEng || ''}
               onChange={(e) => setFormData({ ...formData, NameEng: e.target.value })}
+              error={fieldErrors.NameEng}
             />
           </div>
 
@@ -454,6 +605,7 @@ export const Products: React.FC = () => {
               label="Código Interno *"
               value={formData.InternalCode}
               onChange={(e) => setFormData({ ...formData, InternalCode: e.target.value })}
+              error={fieldErrors.InternalCode}
               required
               disabled
             />
@@ -461,6 +613,7 @@ export const Products: React.FC = () => {
               label="Código de Barras"
               value={formData.BarCode || ''}
               onChange={(e) => setFormData({ ...formData, BarCode: e.target.value })}
+              error={fieldErrors.BarCode}
             />
           </div>
 
@@ -470,7 +623,7 @@ export const Products: React.FC = () => {
               <select
                 className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-nerus-500 focus:border-transparent bg-white hover:border-gray-300"
                 value={formData.ProductGroupID || ''}
-                onChange={(e) => setFormData({ ...formData, ProductGroupID: e.target.value ? Number(e.target.value) : undefined })}
+                onChange={(e) => setFormData({ ...formData, ProductGroupID: e.target.value ? Number(e.target.value) : 0 })}
               >
                 <option value="">Selecione...</option>
                 {productGroups.map(group => (
@@ -504,7 +657,7 @@ export const Products: React.FC = () => {
               <select
                 className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-nerus-500 focus:border-transparent bg-white hover:border-gray-300"
                 value={formData.UnitTypeID || ''}
-                onChange={(e) => setFormData({ ...formData, UnitTypeID: e.target.value ? Number(e.target.value) : undefined })}
+                onChange={(e) => setFormData({ ...formData, UnitTypeID: e.target.value ? Number(e.target.value) : 0 })}
               >
                 <option value="">Selecione...</option>
                 {unitTypes.map(unit => (
@@ -537,7 +690,8 @@ export const Products: React.FC = () => {
             type="number"
             step="0.01"
             value={formData.SalePrice || ''}
-            onChange={(e) => setFormData({ ...formData, SalePrice: e.target.value ? parseFloat(e.target.value) : undefined })}
+            onChange={(e) => setFormData({ ...formData, SalePrice: e.target.value ? parseFloat(e.target.value) : 0 })}
+            error={fieldErrors.SalePrice}
           />
 
           <div className="border-t-2 border-gray-100 pt-6 mt-2">
@@ -547,30 +701,37 @@ export const Products: React.FC = () => {
               </svg>
               Informações Fiscais (NFC-e)
             </h4>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <Input
                 label="NCM"
                 value={formData.NFCeNCM || ''}
                 onChange={(e) => setFormData({ ...formData, NFCeNCM: e.target.value })}
+                error={fieldErrors.NFCeNCM}
               />
               <Input
                 label="CFOP"
                 value={formData.NFCeCFOP || ''}
                 onChange={(e) => setFormData({ ...formData, NFCeCFOP: e.target.value })}
+                error={fieldErrors.NFCeCFOP}
               />
             </div>
 
             <div className="grid grid-cols-3 gap-4">
               <Input
-                label="CST"
+                label="CST ICMS"
                 value={formData.NFCeCST || ''}
                 onChange={(e) => setFormData({ ...formData, NFCeCST: e.target.value })}
+                error={fieldErrors.NFCeCST}
+                maxLength={3}
+                placeholder="3 dígitos"
               />
               <Input
                 label="CEST"
                 value={formData.NFCeCEST || ''}
                 onChange={(e) => setFormData({ ...formData, NFCeCEST: e.target.value })}
+                error={fieldErrors.NFCeCEST}
+                placeholder="Se CST=110"
               />
               <Input
                 label="Alíquota ICMS (%)"
@@ -578,6 +739,7 @@ export const Products: React.FC = () => {
                 step="0.01"
                 value={formData.NFCeAliqICMS || ''}
                 onChange={(e) => setFormData({ ...formData, NFCeAliqICMS: e.target.value ? parseFloat(e.target.value) : undefined })}
+                error={fieldErrors.NFCeAliqICMS}
               />
             </div>
 
@@ -586,6 +748,9 @@ export const Products: React.FC = () => {
                 label="CST PIS"
                 value={formData.NFCeCSTPIS || ''}
                 onChange={(e) => setFormData({ ...formData, NFCeCSTPIS: e.target.value })}
+                error={fieldErrors.NFCeCSTPIS}
+                maxLength={2}
+                placeholder="2 dígitos"
               />
               <Input
                 label="Alíquota PIS (%)"
@@ -593,11 +758,16 @@ export const Products: React.FC = () => {
                 step="0.01"
                 value={formData.NFCeAliqPIS || ''}
                 onChange={(e) => setFormData({ ...formData, NFCeAliqPIS: e.target.value ? parseFloat(e.target.value) : undefined })}
+                error={fieldErrors.NFCeAliqPIS}
+                placeholder="Ex: 1.65"
               />
               <Input
                 label="CST COFINS"
                 value={formData.NFCeCSTCOFINS || ''}
                 onChange={(e) => setFormData({ ...formData, NFCeCSTCOFINS: e.target.value })}
+                error={fieldErrors.NFCeCSTCOFINS}
+                maxLength={2}
+                placeholder="2 dígitos"
               />
             </div>
 
@@ -607,6 +777,8 @@ export const Products: React.FC = () => {
               step="0.01"
               value={formData.NFCeAliqCOFINS || ''}
               onChange={(e) => setFormData({ ...formData, NFCeAliqCOFINS: e.target.value ? parseFloat(e.target.value) : undefined })}
+              error={fieldErrors.NFCeAliqCOFINS}
+              placeholder="Ex: 7.60"
             />
           </div>
         </form>
@@ -699,7 +871,7 @@ export const Products: React.FC = () => {
                 <div className="w-1 h-4 bg-nerus-600 rounded mr-2"></div>
                 Informações Fiscais (NFC-e)
               </h4>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-gray-50 rounded-lg p-3">
                   <label className="block text-xs font-semibold text-gray-500 mb-1">NCM</label>
@@ -757,6 +929,6 @@ export const Products: React.FC = () => {
           </div>
         )}
       </Modal>
-    </div>
+    </div >
   );
 };
