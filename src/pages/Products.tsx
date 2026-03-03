@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Button, Modal, Input } from '../components/common';
 import { useProducts } from '../hooks';
-import type { CreateProductDTO, Product, ProductGroup, ProductType, UnitType, Status } from '../types';
+import type { CreateProductDTO, Product, ProductGroup, UnitType } from '../types';
 import { productService } from '../services';
 
 export const Products: React.FC = () => {
@@ -16,9 +16,7 @@ export const Products: React.FC = () => {
 
   // Estados para os dropdowns
   const [productGroups, setProductGroups] = useState<ProductGroup[]>([]);
-  const [productTypes, setProductTypes] = useState<ProductType[]>([]);
   const [unitTypes, setUnitTypes] = useState<UnitType[]>([]);
-  const [statuses, setStatuses] = useState<Status[]>([]);
 
   const [formData, setFormData] = useState<CreateProductDTO>({
     Name: '',
@@ -26,6 +24,7 @@ export const Products: React.FC = () => {
     SalePrice: 0,
     ProductGroupID: 0,
     UnitTypeID: 0,
+    StatusID: 1, // Default: Desabilitado
     NFCeNCM: '',
     NFCeCFOP: '',
     NFCeCST: '',
@@ -57,16 +56,12 @@ export const Products: React.FC = () => {
   useEffect(() => {
     const loadDropdownData = async () => {
       try {
-        const [groups, types, units, statusList] = await Promise.all([
+        const [groups, units] = await Promise.all([
           productService.getProductGroups(),
-          productService.getProductTypes(),
           productService.getUnitTypes(),
-          productService.getStatuses(),
         ]);
         setProductGroups(groups);
-        setProductTypes(types);
         setUnitTypes(units);
-        setStatuses(statusList);
       } catch (err) {
         console.error('Erro ao carregar dados dos dropdowns:', err);
       }
@@ -89,6 +84,7 @@ export const Products: React.FC = () => {
           SalePrice: 0,
           ProductGroupID: 0,
           UnitTypeID: 0,
+          StatusID: 1, // Default: Desabilitado
           NFCeNCM: '',
           NFCeCFOP: '',
           NFCeCST: '',
@@ -119,9 +115,8 @@ export const Products: React.FC = () => {
       BarCode: product.BarCode || '',
       SalePrice: product.SalePrice ?? 0,
       ProductGroupID: product.ProductGroupID ?? 0,
-      ProductTypeID: product.ProductTypeID,
       UnitTypeID: product.UnitTypeID ?? 0,
-      StatusID: product.StatusID,
+      StatusID: product.StatusID ?? 1,
       NFCeNCM: product.NFCeNCM || '',
       NFCeCFOP: product.NFCeCFOP || '',
       NFCeCST: product.NFCeCST || '',
@@ -156,6 +151,7 @@ export const Products: React.FC = () => {
         SalePrice: 0,
         ProductGroupID: 0,
         UnitTypeID: 0,
+        StatusID: 1, // Default: Desabilitado
         NFCeNCM: '',
         NFCeCFOP: '',
         NFCeCST: '',
@@ -370,24 +366,6 @@ export const Products: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Tipo de Produto</label>
-              <select
-                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-nerus-500 focus:border-transparent bg-white hover:border-gray-300"
-                value={formData.ProductTypeID || ''}
-                onChange={(e) => setFormData({ ...formData, ProductTypeID: e.target.value ? Number(e.target.value) : undefined })}
-              >
-                <option value="">Selecione...</option>
-                {productTypes.map(type => (
-                  <option key={type.ProductTypeID} value={type.ProductTypeID}>
-                    {type.Name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Unidade</label>
               <select
                 className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-nerus-500 focus:border-transparent bg-white hover:border-gray-300"
@@ -402,21 +380,27 @@ export const Products: React.FC = () => {
                 ))}
               </select>
             </div>
+          </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
-              <select
-                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-nerus-500 focus:border-transparent bg-white hover:border-gray-300"
-                value={formData.StatusID || ''}
-                onChange={(e) => setFormData({ ...formData, StatusID: e.target.value ? Number(e.target.value) : undefined })}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Status do Produto</label>
+            <div className="flex items-center space-x-3 bg-gray-50 rounded-xl p-4">
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, StatusID: formData.StatusID === 2 ? 1 : 2 })}
+                className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-nerus-500 focus:ring-offset-2 ${
+                  formData.StatusID === 2 ? 'bg-green-500' : 'bg-gray-300'
+                }`}
               >
-                <option value="">Selecione...</option>
-                {statuses.map(status => (
-                  <option key={status.StatusID} value={status.StatusID}>
-                    {status.Name}
-                  </option>
-                ))}
-              </select>
+                <span
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                    formData.StatusID === 2 ? 'translate-x-8' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+              <span className={`text-sm font-semibold ${formData.StatusID === 2 ? 'text-green-600' : 'text-gray-600'}`}>
+                {formData.StatusID === 2 ? 'Habilitado' : 'Desabilitado'}
+              </span>
             </div>
           </div>
 
@@ -635,24 +619,6 @@ export const Products: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Tipo de Produto</label>
-              <select
-                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-nerus-500 focus:border-transparent bg-white hover:border-gray-300"
-                value={formData.ProductTypeID || ''}
-                onChange={(e) => setFormData({ ...formData, ProductTypeID: e.target.value ? Number(e.target.value) : undefined })}
-              >
-                <option value="">Selecione...</option>
-                {productTypes.map(type => (
-                  <option key={type.ProductTypeID} value={type.ProductTypeID}>
-                    {type.Name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Unidade</label>
               <select
                 className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-nerus-500 focus:border-transparent bg-white hover:border-gray-300"
@@ -667,21 +633,27 @@ export const Products: React.FC = () => {
                 ))}
               </select>
             </div>
+          </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
-              <select
-                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-nerus-500 focus:border-transparent bg-white hover:border-gray-300"
-                value={formData.StatusID || ''}
-                onChange={(e) => setFormData({ ...formData, StatusID: e.target.value ? Number(e.target.value) : undefined })}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Status do Produto</label>
+            <div className="flex items-center space-x-3 bg-gray-50 rounded-xl p-4">
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, StatusID: formData.StatusID === 2 ? 1 : 2 })}
+                className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-nerus-500 focus:ring-offset-2 ${
+                  formData.StatusID === 2 ? 'bg-green-500' : 'bg-gray-300'
+                }`}
               >
-                <option value="">Selecione...</option>
-                {statuses.map(status => (
-                  <option key={status.StatusID} value={status.StatusID}>
-                    {status.Name}
-                  </option>
-                ))}
-              </select>
+                <span
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                    formData.StatusID === 2 ? 'translate-x-8' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+              <span className={`text-sm font-semibold ${formData.StatusID === 2 ? 'text-green-600' : 'text-gray-600'}`}>
+                {formData.StatusID === 2 ? 'Habilitado' : 'Desabilitado'}
+              </span>
             </div>
           </div>
 
@@ -855,12 +827,14 @@ export const Products: React.FC = () => {
                   <p className="text-gray-900 font-medium">{selectedProduct.ProductGroupID || '-'}</p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-3">
-                  <label className="block text-xs font-semibold text-gray-500 mb-1">Tipo</label>
-                  <p className="text-gray-900 font-medium">{selectedProduct.ProductTypeID || '-'}</p>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-3">
                   <label className="block text-xs font-semibold text-gray-500 mb-1">Unidade</label>
                   <p className="text-gray-900 font-medium">{selectedProduct.UnitTypeID || '-'}</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <label className="block text-xs font-semibold text-gray-500 mb-1">Status</label>
+                  <p className={`font-semibold ${selectedProduct.StatusID === 2 ? 'text-green-600' : 'text-gray-600'}`}>
+                    {selectedProduct.StatusID === 2 ? 'Habilitado' : 'Desabilitado'}
+                  </p>
                 </div>
               </div>
             </div>

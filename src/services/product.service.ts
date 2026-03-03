@@ -41,8 +41,8 @@ export const productService = {
     return response.data;
   },
 
-  async getStatuses(): Promise<Status[]> {
-    const response = await api.get<Status[]>('/statuses');
+  async getstatustypes(): Promise<Status[]> {
+    const response = await api.get<Status[]>('/statustypes');
     return response.data;
   },
 };
