@@ -5,8 +5,10 @@ import type { CreateProductDTO, Product, ProductGroup, ProductType, Status, Unit
 import { productService } from '../services';
 
 export const Products: React.FC = () => {
-  const { products, loading, error, refetch, createProduct } = useProducts();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const { products, pagination, loading, error, refetch, createProduct } =
+    useProducts(page, limit); const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -212,8 +214,8 @@ export const Products: React.FC = () => {
         return (
           <span
             className={`px-3 py-1 rounded-full text-xs font-semibold ${enabled
-                ? "bg-green-100 text-green-700"
-                : "bg-red-100 text-red-700"
+              ? "bg-green-100 text-green-700"
+              : "bg-red-100 text-red-700"
               }`}
           >
             {status}
@@ -296,8 +298,7 @@ export const Products: React.FC = () => {
           </svg>
           {error}
         </div>
-      )}
-
+      )}  
       <Card className="animate-slide-in">
         <Table
           data={products || []}
@@ -305,8 +306,48 @@ export const Products: React.FC = () => {
           loading={loading}
           emptyMessage="Nenhum produto encontrado"
         />
-      </Card>
 
+        {pagination && (
+          <div className="flex justify-between items-center mt-4 px-4 pb-4">
+            <select
+              value={limit}
+              onChange={(e) => {
+                setLimit(Number(e.target.value));
+                setPage(1);
+              }}
+              className="border rounded px-2 py-1 text-sm"
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+            </select>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={page === 1}
+              onClick={() => setPage(p => p - 1)}
+            >
+              ← Anterior
+            </Button>
+
+            <span className="text-sm text-gray-600 font-medium">
+              Página {pagination.page} de {pagination.totalPages}
+              {" • "}
+              {pagination.total} produtos
+            </span>
+
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={page === pagination.totalPages}
+              onClick={() => setPage(p => p + 1)}
+            >
+              Próxima →
+            </Button>
+
+          </div>
+        )}
+      </Card>
       <Modal
         isOpen={isModalOpen}
         onClose={() => {

@@ -2,9 +2,12 @@ import { api } from './api';
 import type { Product, CreateProductDTO, ProductGroup, ProductType, UnitType, Status } from '../types';
 
 export const productService = {
-  async getAll(): Promise<Product[]> {
-    const response = await api.get<Product[]>('/products');
-    return response.data;
+  async getAll(page: number, limit: number) {
+    const response = await api.get('/products', {
+      params: { page, limit }
+    })
+
+    return response.data
   },
 
   async getById(id: number): Promise<Product> {

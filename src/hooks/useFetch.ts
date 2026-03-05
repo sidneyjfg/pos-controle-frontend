@@ -1,19 +1,16 @@
-import { useState, useEffect } from 'react';
-
-interface UseFetchState<T> {
-  data: T | null;
-  loading: boolean;
-  error: string | null;
-}
+import { useState, useEffect } from "react";
 
 interface UseFetchOptions {
   immediate?: boolean;
+  deps?: any[];
 }
 
 export function useFetch<T>(
   apiFunc: () => Promise<T>,
-  options: UseFetchOptions = { immediate: true }
-): UseFetchState<T> & { refetch: () => Promise<void> } {
+  options: UseFetchOptions = {}
+) {
+  const { immediate = true, deps = [] } = options;
+
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +22,8 @@ export function useFetch<T>(
       const result = await apiFunc();
       setData(result);
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || err.message || 'Erro desconhecido';
+      const errorMessage =
+        err.response?.data?.message || err.message || "Erro desconhecido";
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -33,10 +31,9 @@ export function useFetch<T>(
   };
 
   useEffect(() => {
-    if (options.immediate) {
-      fetchData();
-    }
-  }, []);
+    if (immediate) fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
 
   return { data, loading, error, refetch: fetchData };
 }
