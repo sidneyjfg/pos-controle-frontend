@@ -5,10 +5,10 @@ export interface Product {
   NameEng?: string | null;
   BarCode?: string | null;
   SalePrice?: number | null;
-  ProductGroupID?: number | null;
-  ProductTypeID?: number | null;
-  UnitTypeID?: number | null;
-  StatusID?: number | null;
+  ProductGroupID: string;
+  ProductTypeID: string;
+  UnitTypeID: string;
+  StatusID: string;
   NFCeNCM?: string | null;
   NFCeCFOP?: string | null;
   NFCeCST?: string | null;
@@ -18,7 +18,7 @@ export interface Product {
   NFCeAliqPIS?: number | null;
   NFCeCSTCOFINS?: string | null;
   NFCeAliqCOFINS?: number | null;
-  ExternalReference?: string | null;
+  ExternalID?: string | null;
   CreatedAt?: string;
   UpdatedAt?: string;
   // Campo não persistido no banco (apenas para upload de imagem)
@@ -28,26 +28,26 @@ export interface Product {
 export interface ProductType {
   ProductTypeID: number;
   Name: string;
-  ExternalReference?: string | null;
+  ExternalID: string
 }
 
 export interface ProductGroup {
   ProductGroupID: number;
   Name: string;
-  ExternalReference?: string | null;
+  ExternalID: string;
 }
 
 export interface UnitType {
   UnitTypeID: number;
   Name: string;
   Abbreviation: string;
-  ExternalReference?: string | null;
+  ExternalID: string;
 }
 
 export interface Status {
   StatusID: number;
   Name: string;
-  ExternalReference?: string | null;
+  ExternalID: string;
 }
 
 export interface CreateProductDTO {
@@ -56,10 +56,10 @@ export interface CreateProductDTO {
   InternalCode: string;
   BarCode?: string | null;
   SalePrice: number; // Obrigatório
-  ProductGroupID: number; // Obrigatório
-  UnitTypeID: number; // Obrigatório
-  ProductTypeID?: number | null;
-  StatusID?: number | null;
+  ProductGroupID: string; // Obrigatório
+  UnitTypeID: string; // Obrigatório
+  ProductTypeID: string;
+  StatusID: string;
   ImageBase64?: string;
   NFCeNCM?: string | null;
   NFCeCFOP?: string | null;

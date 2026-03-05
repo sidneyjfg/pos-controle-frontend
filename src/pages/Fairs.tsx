@@ -34,7 +34,12 @@ export const Fairs: React.FC = () => {
   };
 
   const handleSync = async (fairId: string) => {
-    if (window.confirm('Deseja sincronizar esta feira com o sistema externo?')) {
+    const fair = fairs?.find(f => f.FairID === fairId);
+    const message = fair?.IsActive
+      ? 'Deseja sincronizar esta feira? Os produtos serão ATIVADOS no sistema externo.'
+      : 'Deseja sincronizar esta feira? Os produtos serão DESATIVADOS no sistema externo.';
+    
+    if (window.confirm(message)) {
       await syncFair.execute(fairId);
       refetch();
     }
@@ -200,10 +205,10 @@ export const Fairs: React.FC = () => {
             variant="primary"
             size="sm"
             onClick={() => handleSync(row.FairID)}
-            disabled={row.IsSynced || !row.IsActive}
-            title={!row.IsActive ? "Ative a feira primeiro" : ""}
+            disabled={false}
+            title={row.IsActive ? "Sincronizar produtos com status ativo" : "Sincronizar produtos com status desativado"}
           >
-            {row.IsSynced ? 'Sincronizada' : 'Sincronizar'}
+            Sincronizar
           </Button>
         </div>
       ),

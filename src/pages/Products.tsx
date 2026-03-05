@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Button, Modal, Input } from '../components/common';
 import { useProducts } from '../hooks';
-import type { CreateProductDTO, Product, ProductGroup, UnitType } from '../types';
+import type { CreateProductDTO, Product, ProductGroup, ProductType, Status, UnitType } from '../types';
 import { productService } from '../services';
 
 export const Products: React.FC = () => {
@@ -16,15 +16,32 @@ export const Products: React.FC = () => {
 
   // Estados para os dropdowns
   const [productGroups, setProductGroups] = useState<ProductGroup[]>([]);
+  const [productTypes, setProductTypes] = useState<ProductType[]>([]);
   const [unitTypes, setUnitTypes] = useState<UnitType[]>([]);
+  const [statustypes, setStatustypes] = useState<Status[]>([]);
 
-  const [formData, setFormData] = useState<CreateProductDTO>({
+  const enabledStatus = statustypes.find(s => s.Name === "Habilitado");
+  const disabledStatus = statustypes.find(s => s.Name === "Desabilitado");
+  const statusMap = Object.fromEntries(
+    statustypes.map(s => [s.ExternalID, s.Name])
+  );
+
+  const groupMap = Object.fromEntries(
+    productGroups.map(g => [g.ExternalID, g.Name])
+  );
+
+  const unitMap = Object.fromEntries(
+    unitTypes.map(u => [u.ExternalID, u.Name])
+  );
+
+  const initialFormData: CreateProductDTO = {
     Name: '',
     InternalCode: '',
     SalePrice: 0,
-    ProductGroupID: 0,
-    UnitTypeID: 0,
-    StatusID: 1, // Default: Desabilitado
+    ProductGroupID: '',
+    UnitTypeID: '',
+    ProductTypeID: '',
+    StatusID: '', // Default: Desabilitado
     NFCeNCM: '',
     NFCeCFOP: '',
     NFCeCST: '',
@@ -32,10 +49,18 @@ export const Products: React.FC = () => {
     NFCeAliqPIS: 0,
     NFCeCSTCOFINS: '',
     NFCeAliqCOFINS: 0,
-  });
+  };
+
+  const [formData, setFormData] = useState<CreateProductDTO>(initialFormData);
 
   const clearFieldErrors = () => {
     setFieldErrors({});
+  };
+
+  const resetForm = () => {
+    setFormData(initialFormData);
+    clearFieldErrors();
+    setUpdateError(null);
   };
 
   const mapValidationErrors = (err: any) => {
@@ -56,16 +81,32 @@ export const Products: React.FC = () => {
   useEffect(() => {
     const loadDropdownData = async () => {
       try {
-        const [groups, units] = await Promise.all([
+        const [groups, types, units, statuses] = await Promise.all([
           productService.getProductGroups(),
+          productService.getProductTypes(),
           productService.getUnitTypes(),
+          productService.getstatustypes(),
         ]);
+
         setProductGroups(groups);
+        setProductTypes(types);
         setUnitTypes(units);
+        setStatustypes(statuses);
+
+        const disabled = statuses.find(s => s.Name === "Desabilitado");
+
+        if (disabled) {
+          setFormData(prev => ({
+            ...prev,
+            StatusID: disabled.ExternalID
+          }));
+        }
+
       } catch (err) {
         console.error('Erro ao carregar dados dos dropdowns:', err);
       }
     };
+
     loadDropdownData();
   }, []);
 
@@ -78,22 +119,7 @@ export const Products: React.FC = () => {
 
       if (result) {
         setIsModalOpen(false);
-        setFormData({
-          Name: '',
-          InternalCode: '',
-          SalePrice: 0,
-          ProductGroupID: 0,
-          UnitTypeID: 0,
-          StatusID: 1, // Default: Desabilitado
-          NFCeNCM: '',
-          NFCeCFOP: '',
-          NFCeCST: '',
-          NFCeCSTPIS: '',
-          NFCeAliqPIS: 0,
-          NFCeCSTCOFINS: '',
-          NFCeAliqCOFINS: 0,
-        });
-
+        resetForm();
         refetch();
       }
     } catch (err: any) {
@@ -114,9 +140,10 @@ export const Products: React.FC = () => {
       InternalCode: product.InternalCode,
       BarCode: product.BarCode || '',
       SalePrice: product.SalePrice ?? 0,
-      ProductGroupID: product.ProductGroupID ?? 0,
-      UnitTypeID: product.UnitTypeID ?? 0,
-      StatusID: product.StatusID ?? 1,
+      ProductGroupID: product.ProductGroupID ?? '',
+      ProductTypeID: product.ProductTypeID ?? '',
+      UnitTypeID: product.UnitTypeID ?? '',
+      StatusID: product.StatusID ?? '',
       NFCeNCM: product.NFCeNCM || '',
       NFCeCFOP: product.NFCeCFOP || '',
       NFCeCST: product.NFCeCST || '',
@@ -143,24 +170,7 @@ export const Products: React.FC = () => {
 
       setIsEditModalOpen(false);
       setSelectedProduct(null);
-      clearFieldErrors();
-
-      setFormData({
-        Name: '',
-        InternalCode: '',
-        SalePrice: 0,
-        ProductGroupID: 0,
-        UnitTypeID: 0,
-        StatusID: 1, // Default: Desabilitado
-        NFCeNCM: '',
-        NFCeCFOP: '',
-        NFCeCST: '',
-        NFCeCSTPIS: '',
-        NFCeAliqPIS: 0,
-        NFCeCSTCOFINS: '',
-        NFCeAliqCOFINS: 0,
-      });
-
+      resetForm();
       refetch();
     } catch (err: any) {
       const handled = mapValidationErrors(err);
@@ -190,6 +200,27 @@ export const Products: React.FC = () => {
   const columns = [
     { header: 'ID', accessor: 'ProductID' as keyof Product },
     { header: 'Nome', accessor: 'Name' as keyof Product },
+    {
+      header: 'Status',
+      accessor: (row: Product) => {
+        const status = row.StatusID ? statusMap[row.StatusID] : null;
+
+        if (!status) return "-";
+
+        const enabled = status === "Habilitado";
+
+        return (
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-semibold ${enabled
+                ? "bg-green-100 text-green-700"
+                : "bg-red-100 text-red-700"
+              }`}
+          >
+            {status}
+          </span>
+        );
+      }
+    },
     { header: 'Código Interno', accessor: 'InternalCode' as keyof Product },
     { header: 'Código de Barras', accessor: 'BarCode' as keyof Product },
     {
@@ -280,7 +311,7 @@ export const Products: React.FC = () => {
         isOpen={isModalOpen}
         onClose={() => {
           setIsModalOpen(false);
-          clearFieldErrors();
+          resetForm();
         }}
         title="Novo Produto"
         size="xl"
@@ -288,7 +319,7 @@ export const Products: React.FC = () => {
           <>
             <Button variant="secondary" onClick={() => {
               setIsModalOpen(false);
-              clearFieldErrors();
+              resetForm();
             }}>
               Cancelar
             </Button>
@@ -348,17 +379,18 @@ export const Products: React.FC = () => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Grupo de Produto</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Grupo de Produto *</label>
               <select
                 className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-nerus-500 focus:border-transparent bg-white hover:border-gray-300"
                 value={formData.ProductGroupID || ''}
-                onChange={(e) => setFormData({ ...formData, ProductGroupID: e.target.value ? Number(e.target.value) : 0 })}
+                onChange={(e) => setFormData({ ...formData, ProductGroupID: e.target.value ? e.target.value : '' })}
+                required
               >
                 <option value="">Selecione...</option>
                 {productGroups.map(group => (
-                  <option key={group.ProductGroupID} value={group.ProductGroupID}>
+                  <option key={group.ExternalID} value={group.ExternalID}>
                     {group.Name}
                   </option>
                 ))}
@@ -366,15 +398,32 @@ export const Products: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Unidade</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Tipo de Produto</label>
+              <select
+                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-nerus-500 focus:border-transparent bg-white hover:border-gray-300"
+                value={formData.ProductTypeID || ''}
+                onChange={(e) => setFormData({ ...formData, ProductTypeID: e.target.value ? e.target.value : '' })}
+              >
+                <option value="">Selecione...</option>
+                {productTypes.map(type => (
+                  <option key={type.ExternalID} value={type.ExternalID}>
+                    {type.Name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Unidade *</label>
               <select
                 className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-nerus-500 focus:border-transparent bg-white hover:border-gray-300"
                 value={formData.UnitTypeID || ''}
-                onChange={(e) => setFormData({ ...formData, UnitTypeID: e.target.value ? Number(e.target.value) : 0 })}
+                onChange={(e) => setFormData({ ...formData, UnitTypeID: e.target.value ? e.target.value : '' })}
+                required
               >
                 <option value="">Selecione...</option>
                 {unitTypes.map(unit => (
-                  <option key={unit.UnitTypeID} value={unit.UnitTypeID}>
+                  <option key={unit.ExternalID} value={unit.ExternalID}>
                     {unit.Name} ({unit.Abbreviation})
                   </option>
                 ))}
@@ -387,19 +436,34 @@ export const Products: React.FC = () => {
             <div className="flex items-center space-x-3 bg-gray-50 rounded-xl p-4">
               <button
                 type="button"
-                onClick={() => setFormData({ ...formData, StatusID: formData.StatusID === 2 ? 1 : 2 })}
-                className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-nerus-500 focus:ring-offset-2 ${
-                  formData.StatusID === 2 ? 'bg-green-500' : 'bg-gray-300'
-                }`}
+                onClick={() =>
+                  setFormData({
+                    ...formData,
+                    StatusID:
+                      formData.StatusID === enabledStatus?.ExternalID
+                        ? disabledStatus?.ExternalID || ""
+                        : enabledStatus?.ExternalID || ""
+                  })
+                }
+                className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-nerus-500 focus:ring-offset-2 ${formData.StatusID === enabledStatus?.ExternalID
+                  ? "bg-green-500"
+                  : "bg-gray-300"
+                  }`}
               >
                 <span
-                  className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                    formData.StatusID === 2 ? 'translate-x-8' : 'translate-x-1'
-                  }`}
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${formData.StatusID === enabledStatus?.ExternalID
+                    ? "translate-x-8"
+                    : "translate-x-1"
+                    }`}
                 />
               </button>
-              <span className={`text-sm font-semibold ${formData.StatusID === 2 ? 'text-green-600' : 'text-gray-600'}`}>
-                {formData.StatusID === 2 ? 'Habilitado' : 'Desabilitado'}
+              <span
+                className={`text-sm font-semibold ${formData.StatusID === enabledStatus?.ExternalID
+                  ? "text-green-600"
+                  : "text-gray-600"
+                  }`}
+              >
+                {formData.StatusID ? statusMap[formData.StatusID] || "Desabilitado" : "Desabilitado"}
               </span>
             </div>
           </div>
@@ -519,8 +583,7 @@ export const Products: React.FC = () => {
         onClose={() => {
           setIsEditModalOpen(false);
           setSelectedProduct(null);
-          setUpdateError(null);
-          clearFieldErrors();
+          resetForm();
         }}
         title="Editar Produto"
         size="xl"
@@ -529,8 +592,7 @@ export const Products: React.FC = () => {
             <Button variant="secondary" onClick={() => {
               setIsEditModalOpen(false);
               setSelectedProduct(null);
-              setUpdateError(null);
-              clearFieldErrors();
+              resetForm();
             }}>
               Cancelar
             </Button>
@@ -601,18 +663,40 @@ export const Products: React.FC = () => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Grupo de Produto</label>
               <select
                 className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-nerus-500 focus:border-transparent bg-white hover:border-gray-300"
                 value={formData.ProductGroupID || ''}
-                onChange={(e) => setFormData({ ...formData, ProductGroupID: e.target.value ? Number(e.target.value) : 0 })}
+                onChange={(e) => setFormData({ ...formData, ProductGroupID: e.target.value ? e.target.value : '' })}
               >
                 <option value="">Selecione...</option>
                 {productGroups.map(group => (
-                  <option key={group.ProductGroupID} value={group.ProductGroupID}>
+                  <option
+                    key={group.ExternalID ?? group.ProductGroupID}
+                    value={group.ExternalID ?? ""}
+                  >
                     {group.Name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Tipo de Produto</label>
+              <select
+                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-nerus-500 focus:border-transparent bg-white hover:border-gray-300"
+                value={formData.ProductTypeID || ''}
+                onChange={(e) => setFormData({ ...formData, ProductTypeID: e.target.value ? e.target.value : '' })}
+              >
+                <option value="">Selecione...</option>
+                {productTypes.map(type => (
+                  <option
+                    key={type.ExternalID ?? type.ProductTypeID}
+                    value={type.ExternalID ?? ""}
+                  >
+                    {type.Name}
                   </option>
                 ))}
               </select>
@@ -623,11 +707,14 @@ export const Products: React.FC = () => {
               <select
                 className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-nerus-500 focus:border-transparent bg-white hover:border-gray-300"
                 value={formData.UnitTypeID || ''}
-                onChange={(e) => setFormData({ ...formData, UnitTypeID: e.target.value ? Number(e.target.value) : 0 })}
+                onChange={(e) => setFormData({ ...formData, UnitTypeID: e.target.value ? e.target.value : '' })}
               >
                 <option value="">Selecione...</option>
                 {unitTypes.map(unit => (
-                  <option key={unit.UnitTypeID} value={unit.UnitTypeID}>
+                  <option
+                    key={unit.ExternalID ?? unit.UnitTypeID}
+                    value={unit.ExternalID ?? ""}
+                  >
                     {unit.Name} ({unit.Abbreviation})
                   </option>
                 ))}
@@ -636,25 +723,28 @@ export const Products: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Status do Produto</label>
-            <div className="flex items-center space-x-3 bg-gray-50 rounded-xl p-4">
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, StatusID: formData.StatusID === 2 ? 1 : 2 })}
-                className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-nerus-500 focus:ring-offset-2 ${
-                  formData.StatusID === 2 ? 'bg-green-500' : 'bg-gray-300'
-                }`}
-              >
-                <span
-                  className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                    formData.StatusID === 2 ? 'translate-x-8' : 'translate-x-1'
-                  }`}
-                />
-              </button>
-              <span className={`text-sm font-semibold ${formData.StatusID === 2 ? 'text-green-600' : 'text-gray-600'}`}>
-                {formData.StatusID === 2 ? 'Habilitado' : 'Desabilitado'}
-              </span>
-            </div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Status do Produto
+            </label>
+
+            <select
+              className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-nerus-500 focus:border-transparent bg-white hover:border-gray-300"
+              value={formData.StatusID || ""}
+              onChange={(e) =>
+                setFormData({ ...formData, StatusID: e.target.value })
+              }
+            >
+              <option value="">Selecione...</option>
+
+              {statustypes.map(status => (
+                <option
+                  key={status.ExternalID ?? status.StatusID}
+                  value={status.ExternalID}
+                >
+                  {status.Name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <Input
@@ -824,16 +914,32 @@ export const Products: React.FC = () => {
               <div className="grid grid-cols-3 gap-4">
                 <div className="bg-gray-50 rounded-lg p-3">
                   <label className="block text-xs font-semibold text-gray-500 mb-1">Grupo</label>
-                  <p className="text-gray-900 font-medium">{selectedProduct.ProductGroupID || '-'}</p>
+                  <p className="text-gray-900 font-medium">
+                    {
+                      selectedProduct.ProductGroupID
+                        ? groupMap[selectedProduct.ProductGroupID] || "-"
+                        : "-"
+                    }
+                  </p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-3">
                   <label className="block text-xs font-semibold text-gray-500 mb-1">Unidade</label>
-                  <p className="text-gray-900 font-medium">{selectedProduct.UnitTypeID || '-'}</p>
+                  <p className="text-gray-900 font-medium">
+                    {
+                      selectedProduct.UnitTypeID
+                        ? unitMap[selectedProduct.UnitTypeID] || "-"
+                        : "-"
+                    }
+                  </p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-3">
                   <label className="block text-xs font-semibold text-gray-500 mb-1">Status</label>
-                  <p className={`font-semibold ${selectedProduct.StatusID === 2 ? 'text-green-600' : 'text-gray-600'}`}>
-                    {selectedProduct.StatusID === 2 ? 'Habilitado' : 'Desabilitado'}
+                  <p className="font-semibold text-gray-800">
+                    {
+                      statustypes.find(
+                        (s) => s.ExternalID === selectedProduct.StatusID
+                      )?.Name || "-"
+                    }
                   </p>
                 </div>
               </div>
