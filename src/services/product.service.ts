@@ -2,9 +2,9 @@ import { api } from './api';
 import type { Product, CreateProductDTO, ProductGroup, ProductType, UnitType, Status } from '../types';
 
 export const productService = {
-  async getAll(page: number, limit: number) {
+  async getAll(page: number, limit: number, search?: string) {
     const response = await api.get('/products', {
-      params: { page, limit }
+      params: { page, limit, search: search?.trim() || undefined }
     })
 
     return response.data

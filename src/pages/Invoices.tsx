@@ -13,6 +13,8 @@ const initialPage: InvoicePage = {
 
 export const Invoices: React.FC = () => {
   const [page, setPage] = useState(1);
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
   const [invoicePage, setInvoicePage] = useState<InvoicePage>(initialPage);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
@@ -23,7 +25,7 @@ export const Invoices: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await invoiceService.list(nextPage, 10);
+      const data = await invoiceService.list(nextPage, 10, search);
       setInvoicePage(data);
     } catch (err: any) {
       setError(err.response?.data?.message || err.response?.data?.error || 'Erro ao carregar notas fiscais');
@@ -34,7 +36,19 @@ export const Invoices: React.FC = () => {
 
   useEffect(() => {
     loadInvoices(page);
-  }, [page]);
+  }, [page, search]);
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPage(1);
+    setSearch(searchInput.trim());
+  };
+
+  const handleClearSearch = () => {
+    setSearchInput('');
+    setSearch('');
+    setPage(1);
+  };
 
   const handleSync = async () => {
     try {
@@ -162,12 +176,36 @@ export const Invoices: React.FC = () => {
       )}
 
       <Card>
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
+        <form onSubmit={handleSearchSubmit} className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
           <div>
             <h2 className="text-xl font-bold text-gray-800">NFC-e emitidas</h2>
-            <p className="text-sm text-gray-500">{invoicePage.total} registro(s) encontrado(s)</p>
+            <p className="text-sm text-gray-500">
+              {invoicePage.total} registro(s) encontrado(s)
+              {search ? ` para "${search}"` : ''}
+            </p>
           </div>
-        </div>
+          <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+            <div className="relative w-full sm:w-[28rem]">
+              <svg className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35m1.1-5.4a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z" />
+              </svg>
+              <input
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="Buscar por chave, número, série, NFC-e ID ou SaleID"
+                className="w-full pl-10 pr-3 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-nerus-500 focus:ring-2 focus:ring-nerus-100"
+              />
+            </div>
+            <Button type="submit" variant="secondary" disabled={loading}>
+              Buscar
+            </Button>
+            {search && (
+              <Button type="button" variant="ghost" onClick={handleClearSearch} disabled={loading}>
+                Limpar
+              </Button>
+            )}
+          </div>
+        </form>
 
         <Table
           data={invoicePage.data}
