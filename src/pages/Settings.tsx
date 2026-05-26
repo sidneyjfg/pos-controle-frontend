@@ -4,11 +4,13 @@ import { useAuth, useSettings } from '../hooks';
 
 export const Settings: React.FC = () => {
   const { user } = useAuth();
-  const { credentials, loading, error, updateWebhook, testConnection } = useSettings();
+  const { credentials, loading, error, updateWebhook, rotateApiAccess, testConnection } = useSettings();
   const [webhookUrl, setWebhookUrl] = useState('');
   const [isSavingWebhook, setIsSavingWebhook] = useState(false);
+  const [isRotatingAccess, setIsRotatingAccess] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [apiAccess, setApiAccess] = useState<{ clientId: string; clientSecret: string } | null>(null);
 
   useEffect(() => {
     setWebhookUrl(credentials?.webhookUrl || '');
@@ -47,6 +49,39 @@ export const Settings: React.FC = () => {
     } finally {
       setIsTesting(false);
     }
+  };
+
+  const handleRotateApiAccess = async () => {
+    const confirmed = window.confirm('Rotacionar o acesso técnico? O Client Secret anterior deixará de funcionar.');
+
+    if (!confirmed) return;
+
+    setIsRotatingAccess(true);
+    setMessage(null);
+    setApiAccess(null);
+
+    try {
+      const result = await rotateApiAccess();
+      setApiAccess({
+        clientId: result.clientId,
+        clientSecret: result.clientSecret,
+      });
+      setMessage({ type: 'success', text: result.message });
+    } catch (err: any) {
+      setMessage({
+        type: 'error',
+        text: err.response?.data?.message || 'Erro ao rotacionar acesso técnico.',
+      });
+    } finally {
+      setIsRotatingAccess(false);
+    }
+  };
+
+  const copyApiAccess = async () => {
+    if (!apiAccess) return;
+
+    await navigator.clipboard.writeText(`Client ID: ${apiAccess.clientId}\nClient Secret: ${apiAccess.clientSecret}`);
+    setMessage({ type: 'success', text: 'Acesso técnico copiado.' });
   };
 
   if (loading) {
@@ -111,6 +146,45 @@ export const Settings: React.FC = () => {
 
               <div className="rounded-xl border border-yellow-100 bg-yellow-50 px-4 py-3 text-sm text-yellow-900">
                 O Client Secret é exibido somente quando gerado ou rotacionado no backend. Use Client ID e Client Secret em <span className="font-semibold">POST /auth/token</span> para gerar o Bearer Token da integração.
+              </div>
+
+              {apiAccess && (
+                <div className="rounded-xl border border-green-200 bg-green-50 p-4">
+                  <p className="text-sm font-bold text-green-900 mb-3">Novo acesso técnico gerado</p>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-green-900 mb-1">Client ID</label>
+                      <div className="px-3 py-2 rounded-lg bg-white border border-green-200 font-mono text-xs text-gray-900 break-all">
+                        {apiAccess.clientId}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-green-900 mb-1">Client Secret</label>
+                      <div className="px-3 py-2 rounded-lg bg-white border border-green-200 font-mono text-xs text-gray-900 break-all">
+                        {apiAccess.clientSecret}
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-green-900 mt-3">Guarde o Client Secret agora. Ele não será exibido novamente após sair desta tela.</p>
+                </div>
+              )}
+
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleRotateApiAccess}
+                  loading={isRotatingAccess}
+                  disabled={isRotatingAccess}
+                >
+                  Rotacionar acesso técnico
+                </Button>
+
+                {apiAccess && (
+                  <Button type="button" onClick={copyApiAccess}>
+                    Copiar acesso
+                  </Button>
+                )}
               </div>
             </div>
           </Card>

@@ -71,6 +71,16 @@ export const useSettings = () => {
     }
   };
 
+  const rotateApiAccess = async () => {
+    try {
+      setError(null);
+      return await settingsService.rotateApiAccess();
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Erro ao rotacionar acesso técnico');
+      throw err;
+    }
+  };
+
   return {
     credentials,
     loading,
@@ -79,6 +89,7 @@ export const useSettings = () => {
     updateCredentials,
     createCredentials,
     updateWebhook,
+    rotateApiAccess,
     testConnection,
   };
 };

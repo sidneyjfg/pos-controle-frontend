@@ -25,3 +25,9 @@ export interface CreateApiCredentialsDTO {
 export interface UpdateWebhookDTO {
   webhookUrl: string | null;
 }
+
+export interface RotateApiAccessResponse {
+  clientId: string;
+  clientSecret: string;
+  message: string;
+}

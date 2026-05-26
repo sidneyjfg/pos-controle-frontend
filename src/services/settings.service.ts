@@ -1,5 +1,5 @@
 import { api } from './api';
-import type { ApiCredentials, UpdateApiCredentialsDTO, CreateApiCredentialsDTO, UpdateWebhookDTO } from '../types';
+import type { ApiCredentials, UpdateApiCredentialsDTO, CreateApiCredentialsDTO, UpdateWebhookDTO, RotateApiAccessResponse } from '../types';
 
 export const settingsService = {
   async getApiCredentials(): Promise<ApiCredentials | null> {
@@ -26,6 +26,11 @@ export const settingsService = {
 
   async updateWebhook(data: UpdateWebhookDTO): Promise<ApiCredentials> {
     const response = await api.patch<ApiCredentials>('/settings/webhook', data);
+    return response.data;
+  },
+
+  async rotateApiAccess(): Promise<RotateApiAccessResponse> {
+    const response = await api.post<RotateApiAccessResponse>('/settings/api-access/rotate');
     return response.data;
   },
 
