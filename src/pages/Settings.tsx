@@ -114,19 +114,10 @@ export const Settings: React.FC = () => {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="xl:col-span-2 space-y-6">
           <Card title="Acesso à nossa API" className="animate-slide-in">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Login do painel</label>
-                <div className="px-4 py-3 rounded-xl bg-gray-50 border-2 border-gray-200 font-semibold text-gray-900">
-                  {user?.username || '-'}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">ID do cliente</label>
-                <div className="px-4 py-3 rounded-xl bg-gray-50 border-2 border-gray-200 font-semibold text-gray-900">
-                  {user?.userId || user?.id || '-'}
-                </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Login do painel</label>
+              <div className="px-4 py-3 rounded-xl bg-gray-50 border-2 border-gray-200 font-semibold text-gray-900">
+                {user?.username || '-'}
               </div>
             </div>
 
