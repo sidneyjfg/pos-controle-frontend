@@ -21,8 +21,7 @@ No GitHub do repositorio:
 Configure as variaveis do repositorio em `Settings > Secrets and variables > Actions > Variables`:
 
 ```text
-VITE_API_BASE_URL_DEVELOP=https://api-homolog.seu-dominio.com/api/v1
-VITE_API_BASE_URL_PROD=https://api.seu-dominio.com/api/v1
+VITE_API_BASE_URL=https://api-homolog.seu-dominio.com/api/v1
 ```
 
 Essas URLs sao embutidas no build do frontend.
