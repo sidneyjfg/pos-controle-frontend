@@ -3,6 +3,8 @@ export interface ApiCredentials {
   userApi: string;
   passwordApi: string;
   subscriptionKey: string;
+  webhookUrl?: string | null;
+  hasJwt?: boolean;
   jwt?: string | null;
   jwtExpiresAt?: string | null;
 }
@@ -17,4 +19,9 @@ export interface CreateApiCredentialsDTO {
   userApi: string;
   passwordApi: string;
   subscriptionKey: string;
+  webhookUrl?: string | null;
+}
+
+export interface UpdateWebhookDTO {
+  webhookUrl: string | null;
 }

@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './contexts';
 import { ProtectedRoute } from './components/auth';
 import { Layout } from './components/layout';
-import { Dashboard, Products, Fairs, Settings, Login } from './pages';
+import { Dashboard, Products, Fairs, Settings, Invoices, Login } from './pages';
 
 function App() {
   return (
@@ -49,6 +49,16 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <Settings />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/invoices"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Invoices />
                 </Layout>
               </ProtectedRoute>
             }

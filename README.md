@@ -108,3 +108,8 @@ npm run dev
 ## 📝 Licença
 
 ISC
+
+
+Somente uma feira ativa
+Atualizar tela de configurações (login e senha da nossa api e webhook nada externo)
+Adicionar tela de vendas para download de nfce

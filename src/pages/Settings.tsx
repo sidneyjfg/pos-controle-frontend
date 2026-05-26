@@ -1,79 +1,51 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, Button, Input } from '../components/common';
-import { useSettings } from '../hooks';
-import type { CreateApiCredentialsDTO } from '../types';
+import { useAuth, useSettings } from '../hooks';
 
 export const Settings: React.FC = () => {
-  const { credentials, loading, error, updateCredentials, createCredentials, testConnection } = useSettings();
-  const [isEditing, setIsEditing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const { user } = useAuth();
+  const { credentials, loading, error, updateWebhook, testConnection } = useSettings();
+  const [webhookUrl, setWebhookUrl] = useState('');
+  const [isSavingWebhook, setIsSavingWebhook] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
-  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
-
-  const [formData, setFormData] = useState<CreateApiCredentialsDTO>({
-    userApi: '',
-    passwordApi: '',
-    subscriptionKey: '',
-  });
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
-    if (credentials) {
-      setFormData({
-        userApi: credentials.userApi,
-        passwordApi: '', // Não preenche a senha por segurança
-        subscriptionKey: credentials.subscriptionKey,
-      });
-      setIsEditing(false);
-    } else {
-      setIsEditing(true); // Se não tem credenciais, já abre em modo edição
-    }
-  }, [credentials]);
+    setWebhookUrl(credentials?.webhookUrl || '');
+  }, [credentials?.webhookUrl]);
 
-  const handleSave = async (e: React.FormEvent) => {
+  const handleSaveWebhook = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSaving(true);
-    setTestResult(null);
+    setIsSavingWebhook(true);
+    setMessage(null);
 
     try {
-      if (credentials) {
-        await updateCredentials(credentials.id, formData);
-      } else {
-        await createCredentials(formData);
-      }
-      setIsEditing(false);
-      setFormData({ ...formData, passwordApi: '' }); // Limpa senha após salvar
-    } catch (err) {
-      console.error('Erro ao salvar:', err);
+      await updateWebhook({ webhookUrl: webhookUrl.trim() || null });
+      setMessage({ type: 'success', text: 'Webhook salvo com sucesso.' });
+    } catch (err: any) {
+      setMessage({
+        type: 'error',
+        text: err.response?.data?.message || 'Erro ao salvar webhook.',
+      });
     } finally {
-      setIsSaving(false);
+      setIsSavingWebhook(false);
     }
   };
 
   const handleTestConnection = async () => {
     setIsTesting(true);
-    setTestResult(null);
+    setMessage(null);
 
     try {
       const result = await testConnection();
-      setTestResult(result);
+      setMessage({ type: result.success ? 'success' : 'error', text: result.message });
     } catch (err: any) {
-      setTestResult({
-        success: false,
-        message: err.response?.data?.message || 'Erro ao testar conexão',
+      setMessage({
+        type: 'error',
+        text: err.response?.data?.message || 'Erro ao testar credenciais internas.',
       });
     } finally {
       setIsTesting(false);
-    }
-  };
-
-  const handleCancel = () => {
-    if (credentials) {
-      setFormData({
-        userApi: credentials.userApi,
-        passwordApi: '',
-        subscriptionKey: credentials.subscriptionKey,
-      });
-      setIsEditing(false);
     }
   };
 
@@ -87,175 +59,117 @@ export const Settings: React.FC = () => {
 
   return (
     <div className="animate-fade-in">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-4xl font-black text-gray-800 mb-2">Configurações</h1>
-          <p className="text-gray-600">Gerencie as credenciais da API externa</p>
-        </div>
+      <div className="mb-8">
+        <h1 className="text-4xl font-black text-gray-800 mb-2">Configurações</h1>
+        <p className="text-gray-600">Acesso da nossa API e entrega de notas fiscais</p>
       </div>
 
-      {error && (
-        <div className="bg-red-50 border-l-4 border-red-600 text-red-800 px-6 py-4 rounded-xl mb-6 flex items-center shadow-sm animate-slide-in">
-          <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-          </svg>
-          {error}
+      {(error || message) && (
+        <div
+          className={`border-l-4 px-6 py-4 rounded-xl mb-6 shadow-sm animate-slide-in ${
+            message?.type === 'success'
+              ? 'bg-green-50 border-green-600 text-green-800'
+              : 'bg-red-50 border-red-600 text-red-800'
+          }`}
+        >
+          {message?.text || error}
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Formulário de Credenciais */}
-        <div className="lg:col-span-2">
-          <Card title="Credenciais da API Externa" className="animate-slide-in">
-            <form onSubmit={handleSave} className="space-y-6">
-
-              {/* Campos do formulário */}
-              <Input
-                label="Usuário da API *"
-                value={formData.userApi}
-                onChange={(e) => setFormData({ ...formData, userApi: e.target.value })}
-                disabled={!isEditing}
-                required
-                placeholder="Digite o usuário da API externa"
-              />
-
-              <Input
-                label="Senha da API *"
-                type="password"
-                value={formData.passwordApi}
-                onChange={(e) => setFormData({ ...formData, passwordApi: e.target.value })}
-                disabled={!isEditing}
-                required={!credentials}
-                placeholder={credentials ? "Digite para alterar a senha" : "Digite a senha da API"}
-              />
-
-              <Input
-                label="Subscription Key *"
-                value={formData.subscriptionKey}
-                onChange={(e) => setFormData({ ...formData, subscriptionKey: e.target.value })}
-                disabled={!isEditing}
-                required
-                placeholder="Digite a chave de assinatura"
-              />
-
-              {/* Botões de ação */}
-              {isEditing && (
-                <div className="flex gap-3 pt-4 border-t">
-                  {credentials && (
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={handleCancel}
-                      disabled={isSaving}
-                    >
-                      Cancelar
-                    </Button>
-                  )}
-                  <Button
-                    type="submit"
-                    loading={isSaving}
-                    disabled={isSaving}
-                  >
-                    {credentials ? 'Salvar Alterações' : 'Criar Credenciais'}
-                  </Button>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="xl:col-span-2 space-y-6">
+          <Card title="Acesso à nossa API" className="animate-slide-in">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Login</label>
+                <div className="px-4 py-3 rounded-xl bg-gray-50 border-2 border-gray-200 font-semibold text-gray-900">
+                  {user?.username || '-'}
                 </div>
-              )}
-            </form>
-            {credentials && !isEditing && (
-              <Button onClick={() => setIsEditing(true)} size="lg">
-                <svg className="w-5 h-5 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-                Editar Credenciais
-              </Button>
-            )}
-          </Card>
-        </div>
+              </div>
 
-
-        {/* Painel de Testes */}
-        <div className="lg:col-span-1">
-          <Card title="Testar Conexão" className="animate-slide-in">
-            <div className="space-y-4">
-              <p className="text-sm text-gray-600">
-                Teste a conexão com a API externa para verificar se as credenciais estão corretas.
-              </p>
-
-              <Button
-                onClick={handleTestConnection}
-                loading={isTesting}
-                disabled={isTesting || !credentials}
-                className="w-full"
-              >
-                <svg className="w-5 h-5 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                Testar Conexão
-              </Button>
-
-              {testResult && (
-                <div className={`rounded-xl p-4 border ${testResult.success
-                    ? 'bg-green-50 border-green-200 text-green-800'
-                    : 'bg-red-50 border-red-200 text-red-800'
-                  }`}>
-                  <div className="flex items-start">
-                    {testResult.success ? (
-                      <svg className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                    ) : (
-                      <svg className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                      </svg>
-                    )}
-                    <p className="text-sm">{testResult.message}</p>
-                  </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">ID do cliente</label>
+                <div className="px-4 py-3 rounded-xl bg-gray-50 border-2 border-gray-200 font-semibold text-gray-900">
+                  {user?.userId || user?.id || '-'}
                 </div>
-              )}
+              </div>
+            </div>
 
-              {!credentials && (
-                <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-xl p-4">
-                  <div className="flex items-start">
-                    <svg className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                    <p className="text-sm">Configure as credenciais antes de testar a conexão.</p>
-                  </div>
-                </div>
-              )}
+            <div className="mt-6 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+              A senha não é exibida no painel. Para trocar a senha de acesso, gere uma nova credencial no backend.
             </div>
           </Card>
 
-          {/* Como Obter Credenciais */}
-          <Card title="📋 Como Obter Credenciais" className="animate-slide-in mt-6">
-            <div className="space-y-3 text-sm text-gray-700">
-              <p className="font-semibold text-gray-800">Siga os passos abaixo:</p>
-              <ol className="list-decimal list-inside space-y-2 ml-2">
-                <li className="flex items-start">
-                  <span className="mr-2">1.</span>
-                  <span>Acesse <a href="https://nerus.pdv.mobi/login" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 font-semibold underline">NerusMobile</a></span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">2.</span>
-                  <span>Faça login na sua conta</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">3.</span>
-                  <span>Vá em <span className="font-semibold text-gray-900">Integração → POS Controle</span></span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">4.</span>
-                  <span>Copie: <span className="font-semibold">Usuários</span>, <span className="font-semibold">Senha</span> e <span className="font-semibold">Chave Primária(SubscriptionKey)</span></span>
-                </li>
-              </ol>
-              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <div className="flex items-start">
-                  <svg className="w-4 h-4 mr-2 mt-0.5 text-yellow-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                  </svg>
-                  <p className="text-xs text-yellow-800">As credenciais exibidas aqui são mascaradas por segurança.</p>
-                </div>
+          <Card title="Webhook de notas fiscais" className="animate-slide-in">
+            <form onSubmit={handleSaveWebhook} className="space-y-5">
+              <Input
+                label="URL do webhook"
+                type="url"
+                value={webhookUrl}
+                onChange={(e) => setWebhookUrl(e.target.value)}
+                placeholder="https://cliente.com/webhooks/nfce"
+              />
+
+              <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm text-gray-700">
+                Quando uma NFC-e nova for sincronizada, o backend envia o evento <span className="font-semibold">nfce.created</span> para esta URL.
               </div>
+
+              <div className="flex flex-wrap gap-3 pt-2">
+                <Button type="submit" loading={isSavingWebhook} disabled={isSavingWebhook}>
+                  Salvar webhook
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setWebhookUrl('')}
+                  disabled={isSavingWebhook}
+                >
+                  Limpar
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+
+        <div className="space-y-6">
+          <Card title="Status da integração" className="animate-slide-in">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                <span className="text-sm text-gray-600">Credenciais internas</span>
+                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                  credentials ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                }`}>
+                  {credentials ? 'Configuradas' : 'Ausentes'}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                <span className="text-sm text-gray-600">Webhook</span>
+                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                  credentials?.webhookUrl ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                }`}>
+                  {credentials?.webhookUrl ? 'Ativo' : 'Não configurado'}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Token NerusMobile</span>
+                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                  credentials?.hasJwt ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+                }`}>
+                  {credentials?.hasJwt ? 'Em cache' : 'Sem cache'}
+                </span>
+              </div>
+
+              <Button
+                type="button"
+                onClick={handleTestConnection}
+                loading={isTesting}
+                disabled={isTesting || !credentials}
+                className="w-full mt-2"
+              >
+                Testar integração
+              </Button>
             </div>
           </Card>
         </div>

@@ -1,5 +1,5 @@
 import { api } from './api';
-import type { ApiCredentials, UpdateApiCredentialsDTO, CreateApiCredentialsDTO } from '../types';
+import type { ApiCredentials, UpdateApiCredentialsDTO, CreateApiCredentialsDTO, UpdateWebhookDTO } from '../types';
 
 export const settingsService = {
   async getApiCredentials(): Promise<ApiCredentials | null> {
@@ -21,6 +21,11 @@ export const settingsService = {
 
   async updateApiCredentials(id: number, data: UpdateApiCredentialsDTO): Promise<ApiCredentials> {
     const response = await api.put<ApiCredentials>(`/settings/api-credentials/${id}`, data);
+    return response.data;
+  },
+
+  async updateWebhook(data: UpdateWebhookDTO): Promise<ApiCredentials> {
+    const response = await api.patch<ApiCredentials>('/settings/webhook', data);
     return response.data;
   },
 

@@ -1,7 +1,8 @@
 export interface User {
+  id?: number;
   userId: number;
   username: string;
-  apiCredentialsId: number;
+  apiCredentialsId?: number;
 }
 
 export interface LoginRequest {

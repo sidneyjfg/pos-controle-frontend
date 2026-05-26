@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { settingsService } from '../services';
-import type { ApiCredentials, UpdateApiCredentialsDTO, CreateApiCredentialsDTO } from '../types';
+import type { ApiCredentials, UpdateApiCredentialsDTO, CreateApiCredentialsDTO, UpdateWebhookDTO } from '../types';
 
 export const useSettings = () => {
   const [credentials, setCredentials] = useState<ApiCredentials | null>(null);
@@ -59,6 +59,18 @@ export const useSettings = () => {
     }
   };
 
+  const updateWebhook = async (data: UpdateWebhookDTO) => {
+    try {
+      setError(null);
+      const updated = await settingsService.updateWebhook(data);
+      setCredentials(updated);
+      return updated;
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Erro ao atualizar webhook');
+      throw err;
+    }
+  };
+
   return {
     credentials,
     loading,
@@ -66,6 +78,7 @@ export const useSettings = () => {
     refetch: fetchCredentials,
     updateCredentials,
     createCredentials,
+    updateWebhook,
     testConnection,
   };
 };
