@@ -1,0 +1,14 @@
+services:
+  pos-controle-frontend:
+    image: ghcr.io/sidneyjfg/pos-controle-frontend-${IMAGE_SUFFIX:-prod}:latest
+    container_name: pos-controle-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    networks:
+      - pos-controle
+
+networks:
+  pos-controle:
+    name: pos-controle
+    external: true
