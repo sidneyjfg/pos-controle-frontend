@@ -244,7 +244,6 @@ export const Fairs: React.FC = () => {
               {activeFair
                 ? `A feira ativa agora é "${activeFair.Name}". Desative ela antes de ativar outra.`
                 : 'Nenhuma feira está ativa no momento.'}
-              {' '}Ao sincronizar uma feira, os produtos vinculados são publicados na POS Controle em lotes de até 25 produtos por requisição.
             </p>
           </div>
         </div>
@@ -365,7 +364,7 @@ export const Fairs: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <p className="text-sm">
-                Produtos adicionados aqui só são enviados para a POS Controle ao sincronizar a feira. A API controla internamente os lotes exigidos pela POS Controle.
+                Produtos adicionados aqui só são enviados para a POS Controle ao sincronizar a feira.
               </p>
             </div>
           </div>

@@ -88,32 +88,32 @@ export const Products: React.FC = () => {
   };
 
   const loadDropdownData = async () => {
-      try {
-        const [groups, types, units, statuses] = await Promise.all([
-          productService.getProductGroups(),
-          productService.getProductTypes(),
-          productService.getUnitTypes(),
-          productService.getstatustypes(),
-        ]);
+    try {
+      const [groups, types, units, statuses] = await Promise.all([
+        productService.getProductGroups(),
+        productService.getProductTypes(),
+        productService.getUnitTypes(),
+        productService.getstatustypes(),
+      ]);
 
-        setProductGroups(groups);
-        setProductTypes(types);
-        setUnitTypes(units);
-        setStatustypes(statuses);
+      setProductGroups(groups);
+      setProductTypes(types);
+      setUnitTypes(units);
+      setStatustypes(statuses);
 
-        const disabled = statuses.find(s => s.Name === "Desabilitado");
+      const disabled = statuses.find(s => s.Name === "Desabilitado");
 
-        if (disabled) {
-          setFormData(prev => ({
-            ...prev,
-            StatusID: disabled.ExternalID
-          }));
-        }
-
-      } catch (err) {
-        console.error('Erro ao carregar dados dos dropdowns:', err);
+      if (disabled) {
+        setFormData(prev => ({
+          ...prev,
+          StatusID: disabled.ExternalID
+        }));
       }
-    };
+
+    } catch (err) {
+      console.error('Erro ao carregar dados dos dropdowns:', err);
+    }
+  };
 
   useEffect(() => {
     loadDropdownData();
@@ -372,7 +372,6 @@ export const Products: React.FC = () => {
             <p className="font-semibold">Como os produtos são publicados</p>
             <p className="text-sm mt-1">
               Produtos criados aqui ficam salvos no painel. Eles só são enviados para a POS Controle quando uma feira é sincronizada.
-              O envio externo respeita lotes de até 25 produtos por requisição.
             </p>
           </div>
         </div>
@@ -397,7 +396,7 @@ export const Products: React.FC = () => {
           </svg>
           {error}
         </div>
-      )}  
+      )}
       <Card className="animate-slide-in">
         <form onSubmit={handleSearchSubmit} className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
           <div>
