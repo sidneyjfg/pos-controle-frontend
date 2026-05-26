@@ -130,9 +130,24 @@ export const Invoices: React.FC = () => {
           <svg className="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v6h6M20 20v-6h-6M20 9a8 8 0 00-14.9-4M4 15a8 8 0 0014.9 4" />
           </svg>
-          Sincronizar notas
+          {syncing ? 'Sincronizando...' : 'Sincronizar notas'}
         </Button>
       </div>
+
+      {syncing && (
+        <div className="bg-blue-50 border-l-4 border-blue-600 text-blue-900 px-6 py-4 rounded-xl mb-6 shadow-sm animate-slide-in">
+          <div className="flex items-center">
+            <svg className="animate-spin w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            <div>
+              <p className="font-semibold">Sincronizando notas fiscais</p>
+              <p className="text-sm mt-1">Buscando NFC-e na POS Controle em janelas de 2 dias. Esta operação pode levar alguns minutos.</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="bg-red-50 border-l-4 border-red-600 text-red-800 px-6 py-4 rounded-xl mb-6 shadow-sm">
