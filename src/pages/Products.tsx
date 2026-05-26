@@ -8,11 +8,16 @@ export const Products: React.FC = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const { products, pagination, loading, error, refetch, createProduct } =
-    useProducts(page, limit); const [isModalOpen, setIsModalOpen] = useState(false);
+    useProducts(page, limit);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isSyncingAll, setIsSyncingAll] = useState(false);
+  const [syncAllDone, setSyncAllDone] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -80,8 +85,7 @@ export const Products: React.FC = () => {
     return true;
   };
 
-  useEffect(() => {
-    const loadDropdownData = async () => {
+  const loadDropdownData = async () => {
       try {
         const [groups, types, units, statuses] = await Promise.all([
           productService.getProductGroups(),
@@ -109,8 +113,39 @@ export const Products: React.FC = () => {
       }
     };
 
+  useEffect(() => {
     loadDropdownData();
   }, []);
+
+  const handleSyncAll = async () => {
+    setIsSyncingAll(true);
+    setSyncError(null);
+    setSyncMessage(null);
+
+    try {
+      const result = await productService.syncAll();
+      setSyncAllDone(true);
+      setSyncMessage(
+        `Sincronização concluída: ${result.totalCreated || 0} criados e ${result.totalUpdated || 0} atualizados.`
+      );
+      await loadDropdownData();
+      refetch();
+    } catch (err: any) {
+      setSyncAllDone(false);
+      setSyncError(err.response?.data?.message || err.response?.data?.error || 'Erro ao sincronizar dados. Corrija antes de criar produtos.');
+    } finally {
+      setIsSyncingAll(false);
+    }
+  };
+
+  const handleOpenCreateModal = () => {
+    if (!syncAllDone) {
+      setSyncError('Sincronize todos os dados sem erros antes de criar produtos.');
+      return;
+    }
+
+    setIsModalOpen(true);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -283,13 +318,48 @@ export const Products: React.FC = () => {
           <h1 className="text-4xl font-black text-gray-800 mb-2">Produtos</h1>
           <p className="text-gray-600">Gerencie seu catálogo de produtos</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} size="lg">
-          <svg className="w-5 h-5 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Novo Produto
-        </Button>
+        <div className="flex gap-3">
+          <Button
+            onClick={handleSyncAll}
+            size="lg"
+            variant="secondary"
+            loading={isSyncingAll}
+            disabled={isSyncingAll}
+          >
+            <svg className="w-5 h-5 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v6h6M20 20v-6h-6M20 9a8 8 0 00-14.9-4M4 15a8 8 0 0014.9 4" />
+            </svg>
+            Sincronizar dados
+          </Button>
+          <Button onClick={handleOpenCreateModal} size="lg" disabled={!syncAllDone || isSyncingAll}>
+            <svg className="w-5 h-5 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Novo Produto
+          </Button>
+        </div>
       </div>
+
+      {!syncAllDone && (
+        <div className="bg-yellow-50 border-l-4 border-yellow-500 text-yellow-900 px-6 py-4 rounded-xl mb-6 shadow-sm animate-slide-in">
+          <p className="font-semibold">Sincronização obrigatória</p>
+          <p className="text-sm mt-1">
+            Antes de criar produtos, sincronize Product Groups, Product Types, Unit Types, Status Types e Products. O cadastro só será liberado se a sincronização terminar sem erros.
+          </p>
+        </div>
+      )}
+
+      {syncMessage && (
+        <div className="bg-green-50 border-l-4 border-green-600 text-green-800 px-6 py-4 rounded-xl mb-6 shadow-sm animate-slide-in">
+          {syncMessage}
+        </div>
+      )}
+
+      {syncError && (
+        <div className="bg-red-50 border-l-4 border-red-600 text-red-800 px-6 py-4 rounded-xl mb-6 shadow-sm animate-slide-in">
+          {syncError}
+        </div>
+      )}
 
       {error && (
         <div className="bg-red-50 border-l-4 border-nerus-600 text-red-800 px-6 py-4 rounded-xl mb-6 flex items-center shadow-sm animate-slide-in">
@@ -364,7 +434,7 @@ export const Products: React.FC = () => {
             }}>
               Cancelar
             </Button>
-            <Button onClick={handleSubmit} loading={createProduct.loading}>
+            <Button onClick={handleSubmit} loading={createProduct.loading} disabled={!syncAllDone}>
               Criar
             </Button>
           </>

@@ -48,4 +48,9 @@ export const productService = {
     const response = await api.get<Status[]>('/statustypes');
     return response.data;
   },
+
+  async syncAll() {
+    const response = await api.post('/sync/all');
+    return response.data;
+  },
 };

@@ -29,19 +29,16 @@ export const Navbar: React.FC = () => {
           {/* Logo Nérus */}
           <div className="flex items-center space-x-3">
             <Link to="/" className="flex items-center space-x-3 group">
-              <div className="relative">
-                <div className="absolute inset-0 bg-white/20 rounded-2xl blur-md group-hover:bg-white/30 transition-all duration-300"></div>
-                <div className="relative bg-white rounded-2xl p-2.5 shadow-lg transform group-hover:scale-105 transition-transform duration-300">
-                  <svg className="w-8 h-8 text-nerus-600" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5zm0 2.18l8 3.6v8.55c0 4.55-3.08 8.78-8 9.93-4.92-1.15-8-5.38-8-9.93V7.78l8-3.6zM11 7v2h2V7h-2zm0 4v6h2v-6h-2z"/>
-                  </svg>
-                </div>
-              </div>
+              <img
+                src="/logo.png"
+                alt="Nérus"
+                className="h-12 w-auto bg-white rounded-xl px-2 py-1 shadow-lg transform group-hover:scale-105 transition-transform duration-300"
+              />
               <div>
                 <h1 className="text-2xl font-black tracking-tight">
                   Nérus
                 </h1>
-                <p className="text-xs text-nerus-100 font-medium -mt-1">NerusMobile</p>
+                <p className="text-xs text-nerus-100 font-medium -mt-1">NérusMobile</p>
               </div>
             </Link>
           </div>
@@ -73,9 +70,6 @@ export const Navbar: React.FC = () => {
               <div className="text-right">
                 <p className="text-sm font-semibold text-white">
                   {user?.username || 'Usuário'}
-                </p>
-                <p className="text-xs text-nerus-100">
-                  ID: {user?.userId || user?.id}
                 </p>
               </div>
               <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">

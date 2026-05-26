@@ -233,7 +233,7 @@ export const Settings: React.FC = () => {
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Token NerusMobile</span>
+                <span className="text-sm text-gray-600">Token NérusMobile</span>
                 <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                   credentials?.hasJwt ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
                 }`}>
