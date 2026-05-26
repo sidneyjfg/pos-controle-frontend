@@ -3,6 +3,7 @@ export interface User {
   userId: number;
   username: string;
   apiCredentialsId?: number;
+  apiClientId?: string | null;
 }
 
 export interface LoginRequest {

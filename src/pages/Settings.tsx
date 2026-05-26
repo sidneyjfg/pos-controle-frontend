@@ -81,7 +81,7 @@ export const Settings: React.FC = () => {
           <Card title="Acesso à nossa API" className="animate-slide-in">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Login</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Login do painel</label>
                 <div className="px-4 py-3 rounded-xl bg-gray-50 border-2 border-gray-200 font-semibold text-gray-900">
                   {user?.username || '-'}
                 </div>
@@ -96,7 +96,22 @@ export const Settings: React.FC = () => {
             </div>
 
             <div className="mt-6 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
-              A senha não é exibida no painel. Para trocar a senha de acesso, gere uma nova credencial no backend.
+              A senha do painel não é exibida aqui. Ela serve apenas para acesso humano ao sistema.
+            </div>
+          </Card>
+
+          <Card title="Acesso técnico para integração" className="animate-slide-in">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Client ID</label>
+                <div className="px-4 py-3 rounded-xl bg-gray-50 border-2 border-gray-200 font-mono text-sm text-gray-900 break-all">
+                  {user?.apiClientId || 'Não gerado para este usuário'}
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-yellow-100 bg-yellow-50 px-4 py-3 text-sm text-yellow-900">
+                O Client Secret é exibido somente quando gerado ou rotacionado no backend. Use Client ID e Client Secret em <span className="font-semibold">POST /auth/token</span> para gerar o Bearer Token da integração.
+              </div>
             </div>
           </Card>
 
