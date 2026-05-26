@@ -12,6 +12,7 @@ export const Fairs: React.FC = () => {
   const [selectedFair, setSelectedFair] = useState<Fair | null>(null);
   const [fairProducts, setFairProducts] = useState<FairProduct[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
+  const activeFair = fairs?.find(fair => fair.IsActive);
 
   const [formData, setFormData] = useState<CreateFairDTO>({
     Name: '',
@@ -184,6 +185,8 @@ export const Fairs: React.FC = () => {
             variant={row.IsActive ? "secondary" : "primary"}
             size="sm"
             onClick={() => handleToggleStatus(row)}
+            disabled={!row.IsActive && !!activeFair && activeFair.FairID !== row.FairID}
+            title={!row.IsActive && activeFair && activeFair.FairID !== row.FairID ? `Desative "${activeFair.Name}" antes de ativar outra feira` : undefined}
             className={!row.IsActive ? "bg-green-600 hover:bg-green-700" : ""}
           >
             <svg className="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -229,6 +232,23 @@ export const Fairs: React.FC = () => {
           {error}
         </div>
       )}
+
+      <div className="bg-blue-50 border-l-4 border-blue-600 text-blue-900 px-6 py-4 rounded-xl mb-6 shadow-sm">
+        <div className="flex items-start gap-3">
+          <svg className="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div>
+            <p className="font-semibold">Somente uma feira pode ficar ativa por vez</p>
+            <p className="text-sm mt-1">
+              {activeFair
+                ? `A feira ativa agora é "${activeFair.Name}". Desative ela antes de ativar outra.`
+                : 'Nenhuma feira está ativa no momento.'}
+              {' '}Ao sincronizar uma feira, os produtos vinculados são publicados na POS Controle em lotes de até 25 produtos por requisição.
+            </p>
+          </div>
+        </div>
+      </div>
 
       <Card>
         <Table
@@ -338,6 +358,17 @@ export const Fairs: React.FC = () => {
               </div>
             </div>
           )}
+
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-yellow-900">
+            <div className="flex items-start gap-3">
+              <svg className="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-sm">
+                Produtos adicionados aqui só são enviados para a POS Controle ao sincronizar a feira. A API controla internamente os lotes exigidos pela POS Controle.
+              </p>
+            </div>
+          </div>
 
           {/* Lista de Produtos Disponíveis para Adicionar */}
           <div>
