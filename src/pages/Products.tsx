@@ -371,7 +371,7 @@ export const Products: React.FC = () => {
           <div>
             <p className="font-semibold">Como os produtos são publicados</p>
             <p className="text-sm mt-1">
-              Produtos criados aqui ficam salvos no painel. Eles só são enviados para a POS Controle quando uma feira é sincronizada.
+              Produtos criados aqui ficam salvos no painel. Eles só são enviados para a Nérus Mobile quando uma feira é sincronizada.
             </p>
           </div>
         </div>
@@ -505,7 +505,7 @@ export const Products: React.FC = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <p className="text-sm">
-              Este cadastro salva o produto localmente. Para enviar à POS Controle, vincule o produto em uma feira e sincronize a feira.
+              Este cadastro salva o produto localmente. Para enviar à Nérus Mobile, vincule o produto em uma feira e sincronize a feira.
             </p>
           </div>
         </div>

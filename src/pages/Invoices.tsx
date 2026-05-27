@@ -157,7 +157,7 @@ export const Invoices: React.FC = () => {
             </svg>
             <div>
               <p className="font-semibold">Sincronizando notas fiscais</p>
-              <p className="text-sm mt-1">Buscando NFC-e na POS Controle em janelas de 2 dias. Esta operação pode levar alguns minutos.</p>
+              <p className="text-sm mt-1">Buscando NFC-e na Nérus Mobile em janelas de 2 dias. Esta operação pode levar alguns minutos.</p>
             </div>
           </div>
         </div>

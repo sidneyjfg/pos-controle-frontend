@@ -364,7 +364,7 @@ export const Fairs: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <p className="text-sm">
-                Produtos adicionados aqui só são enviados para a POS Controle ao sincronizar a feira.
+                Produtos adicionados aqui só são enviados para a Nérus Mobile ao sincronizar a feira.
               </p>
             </div>
           </div>
