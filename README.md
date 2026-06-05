@@ -105,6 +105,14 @@ npm run dev
 - `getUnitTypes()` - Lista tipos de unidades
 - `getProductGroups()` - Lista grupos de produtos
 
+### Categorias
+- A tela de categorias exibe ID local, nome, status, imagem e acoes.
+- A lista possui filtro por nome e paginacao local com 10, 20 ou 50 itens por pagina.
+- A tabela nao exibe `ExternalID` nem codigo interno.
+- O backend continua retornando `ExternalID` em `GET /product-groups` para uso interno de integracao/edicao.
+- Na criacao/edicao, o frontend nao envia codigo interno.
+- O nome deve seguir o formato `TigelasDePote`: somente letras e numeros, sem espacos, acentos, cedilha, pontos, virgulas, tracos ou caracteres especiais.
+
 ## 📝 Licença
 
 ISC

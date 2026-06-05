@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './contexts';
 import { ProtectedRoute } from './components/auth';
 import { Layout } from './components/layout';
-import { Dashboard, Products, Fairs, Settings, Invoices, Login } from './pages';
+import { Dashboard, Products, ProductGroups, Fairs, Settings, Invoices, Login } from './pages';
 
 function App() {
   return (
@@ -29,6 +29,16 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <Products />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/product-groups"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ProductGroups />
                 </Layout>
               </ProtectedRoute>
             }

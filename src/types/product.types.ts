@@ -35,6 +35,9 @@ export interface ProductGroup {
   ProductGroupID: number;
   Name: string;
   ExternalID: string;
+  InternalCode?: string | null;
+  StatusExternalID?: string | null;
+  ImageGroupBase64?: string | null;
 }
 
 export interface UnitType {
@@ -70,4 +73,12 @@ export interface CreateProductDTO {
   NFCeAliqPIS?: number | null;
   NFCeCSTCOFINS?: string | null;
   NFCeAliqCOFINS?: number | null;
+}
+
+export interface CreateProductGroupDTO {
+  Name: string;
+  InternalCode?: string | null;
+  StatusID: string;
+  ProductGroupID?: string | null;
+  ImageGroupBase64?: string | null;
 }
